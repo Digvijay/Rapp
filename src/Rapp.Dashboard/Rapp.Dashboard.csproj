@@ -4,6 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>IL2026;IL3050</NoWarn>
+    <!-- Enable Rapp telemetry for dashboard functionality -->
+    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

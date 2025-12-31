@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Enable Rapp telemetry for demo purposes -->
+    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

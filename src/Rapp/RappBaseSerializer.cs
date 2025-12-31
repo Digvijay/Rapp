@@ -175,10 +175,12 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     {
         if (source.Length < 8)
         {
+#if RAPP_TELEMETRY
             if (RappConfiguration.EnableTelemetry)
             {
                 RappMetrics.RecordDeserializationError("insufficient_length", TypeName);
             }
+#endif
             return default!;
         }
 
@@ -188,11 +190,12 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
 
         if (actualHash != SchemaHash)
         {
+#if RAPP_TELEMETRY
             if (RappConfiguration.EnableTelemetry)
             {
                 RappMetrics.RecordSchemaMismatch(TypeName, SchemaHash, actualHash);
             }
-
+#endif
             if (RappConfiguration.ThrowOnSchemaMismatch)
             {
                 throw new RappSchemaMismatchException(TypeName, SchemaHash, actualHash);

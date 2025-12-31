@@ -12,12 +12,13 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v1.0.0 - Initial release of Rapp: Schema-aware binary serialization for enterprise .NET caching. Features cryptographic schema validation, AOT compatibility, and zero-overhead telemetry while providing MemoryPack's performance with deployment safety.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0.0 - Initial release of Rapp: Schema-aware binary serialization for enterprise .NET caching. Features cryptographic schema validation, AOT compatibility, and optional zero-overhead telemetry. Telemetry is EXCLUDED from the NuGet package by default for maximum performance - define RAPP_TELEMETRY to enable monitoring features.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
-    <DefineConstants>RAPP_TELEMETRY</DefineConstants>
+    <!-- Metrics are excluded from NuGet package for zero overhead -->
+    <!-- Define RAPP_TELEMETRY in your project to enable metrics -->
     <!-- Package Validation -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <GenerateCompatibilitySuppressionFile>true</GenerateCompatibilitySuppressionFile>
