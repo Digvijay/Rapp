@@ -1,0 +1,120 @@
+@Rapp.Playground_HostAddress = http://localhost:5009
+
+###
+# Basic Weather Endpoint
+# Demonstrates basic Rapp caching functionality
+GET {{Rapp.Playground_HostAddress}}/weather
+Accept: application/json
+
+###
+# Rapp Dashboard
+# Web-based dashboard showing cache performance and metrics
+GET {{Rapp.Playground_HostAddress}}/rapp
+Accept: text/html
+
+###
+# =============================================================================
+# METRICS DEMONSTRATION ENDPOINTS
+# =============================================================================
+
+###
+# Metrics Demo Operation
+# Demonstrates custom metrics collection with timing
+# Metrics are published to System.Diagnostics.Metrics
+GET {{Rapp.Playground_HostAddress}}/metrics/demo
+Accept: application/json
+
+###
+# Get Current Metrics Stats
+# Shows current metrics state (demo metrics + Rapp cache metrics)
+# Rapp cache metrics require external collection (Prometheus/OpenTelemetry)
+GET {{Rapp.Playground_HostAddress}}/metrics/stats
+Accept: application/json
+
+###
+# Reset Metrics
+# Clears demo metrics counters
+POST {{Rapp.Playground_HostAddress}}/metrics/reset
+Content-Type: application/json
+
+###
+# =============================================================================
+# CACHE SIMULATION ENDPOINTS
+# =============================================================================
+
+###
+# Simulate Cache Operations (10 operations)
+# Demonstrates cache hits/misses and metrics collection
+# Generates rapp_cache_hits_total and rapp_cache_misses_total metrics
+GET {{Rapp.Playground_HostAddress}}/cache/simulate/10
+Accept: application/json
+
+###
+# Simulate Cache Operations (100 operations)
+# Larger simulation to generate more metrics data
+GET {{Rapp.Playground_HostAddress}}/cache/simulate/100
+Accept: application/json
+
+###
+# =============================================================================
+# SCHEMA EVOLUTION DEMO ENDPOINTS
+# =============================================================================
+
+###
+# MemoryPack Crash Demo
+# Shows how MemoryPack fails with schema changes
+GET {{Rapp.Playground_HostAddress}}/demo/memorypack-crash
+Accept: application/json
+
+###
+# Rapp Safety Demo
+# Shows how Rapp handles schema changes safely
+GET {{Rapp.Playground_HostAddress}}/demo/rapp-safety
+Accept: application/json
+
+###
+# JSON Comparison Demo
+# Compares JSON behavior with schema changes
+GET {{Rapp.Playground_HostAddress}}/demo/json-comparison
+Accept: application/json
+
+###
+# =============================================================================
+# PERFORMANCE TESTING WORKFLOW
+# =============================================================================
+
+# 1. Reset metrics to start clean
+POST {{Rapp.Playground_HostAddress}}/metrics/reset
+
+# 2. Run some demo operations
+GET {{Rapp.Playground_HostAddress}}/metrics/demo
+
+# 3. Simulate cache operations to generate Rapp metrics
+GET {{Rapp.Playground_HostAddress}}/cache/simulate/50
+
+# 4. Check final metrics
+GET {{Rapp.Playground_HostAddress}}/metrics/stats
+
+# 5. View dashboard with metrics visualization
+GET {{Rapp.Playground_HostAddress}}/rapp
+
+###
+# =============================================================================
+# METRICS INTEGRATION NOTES
+# =============================================================================
+
+# Rapp automatically collects cache metrics:
+# - rapp_cache_hits_total: Counter for successful cache retrievals
+# - rapp_cache_misses_total: Counter for cache misses requiring computation
+#
+# To collect these metrics in production:
+# 1. Use OpenTelemetry metrics exporter
+# 2. Configure Prometheus metrics collection
+# 3. Use Application Insights or other APM tools
+# 4. Access via System.Diagnostics.Metrics API
+#
+# Example OpenTelemetry setup:
+# builder.Services.AddOpenTelemetry()
+#     .WithMetrics(builder => builder
+#         .AddMeter("Rapp")
+#         .AddPrometheusExporter());

@@ -1,0 +1,43 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write  # Required for Trusted Publishing (OIDC)
+  contents: read   # Required to checkout code
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    # We rebuild to ensure the exact commit matches the tag
+    - name: Pack
+      run: |
+        dotnet restore Rapp.sln
+        dotnet build Rapp.sln --configuration Release
+
+        # Versioning: You might want to use the tag name here (e.g., 1.0.0)
+        VERSION=${{ github.event.release.tag_name }}
+
+        # Remove 'v' prefix if present (e.g. v1.0.0 -> 1.0.0)
+        VERSION=${VERSION#v}
+
+        echo "📦 Packing Version: $VERSION"
+
+        # Pack the main projects
+        dotnet pack src/Rapp/Rapp.csproj -c Release -o out -p:Version=$VERSION
+        dotnet pack src/Rapp.Gen/Rapp.Gen.csproj -c Release -o out -p:Version=$VERSION
+
+    - name: Push to NuGet
+      run: dotnet nuget push "./out/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
