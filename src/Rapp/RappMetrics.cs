@@ -133,6 +133,35 @@ public static class RappMetrics
     /// </para>
     /// </remarks>
     public static void RecordMiss() => CacheMisses.Add(1);
+
+    /// <summary>
+    /// Records a deserialization error event.
+    /// </summary>
+    /// <param name="errorType">The type of error that occurred.</param>
+    /// <param name="typeName">The name of the type being deserialized.</param>
+    /// <remarks>
+    /// Used internally by Rapp to track deserialization failures for monitoring.
+    /// </remarks>
+    internal static void RecordDeserializationError(string errorType, string typeName)
+    {
+        if (!RappConfiguration.EnableTelemetry) return;
+        // Future: Emit metric for deserialization errors
+    }
+
+    /// <summary>
+    /// Records a schema mismatch event.
+    /// </summary>
+    /// <param name="typeName">The name of the type with mismatched schema.</param>
+    /// <param name="expectedHash">The expected schema hash.</param>
+    /// <param name="actualHash">The actual schema hash found.</param>
+    /// <remarks>
+    /// Used internally by Rapp to track schema validation failures for monitoring.
+    /// </remarks>
+    internal static void RecordSchemaMismatch(string typeName, ulong expectedHash, ulong actualHash)
+    {
+        if (!RappConfiguration.EnableTelemetry) return;
+        // Future: Emit metric for schema mismatches
+    }
 }
 
 #if RAPP_TELEMETRY

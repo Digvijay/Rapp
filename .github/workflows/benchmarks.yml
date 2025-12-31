@@ -1,0 +1,80 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [ "main", "development" ]
+    paths:
+      - 'src/**'
+      - 'benchmarks/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/**'
+      - 'benchmarks/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore src/Rapp.Benchmark/Rapp.Benchmark.csproj
+
+    - name: Build
+      run: dotnet build src/Rapp.Benchmark/Rapp.Benchmark.csproj --no-restore --configuration Release
+
+    - name: Run Benchmarks
+      run: |
+        cd src/Rapp.Benchmark
+        dotnet run -c Release --no-build -- --exporters json markdown
+        
+    - name: Store benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: |
+          BenchmarkDotNet.Artifacts/results/*.json
+          BenchmarkDotNet.Artifacts/results/*.md
+
+    - name: Compare benchmarks
+      if: github.event_name == 'pull_request'
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'benchmarkdotnet'
+        output-file-path: BenchmarkDotNet.Artifacts/results/Benchmarks-report.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-on-alert: true
+        alert-threshold: '150%'
+        fail-on-alert: false
+
+    - name: Update benchmark results in repo
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        # Copy results to benchmarks directory
+        cp -r BenchmarkDotNet.Artifacts/results/* benchmarks/
+        
+        # Check if there are changes
+        if git diff --quiet benchmarks/; then
+          echo "No benchmark changes"
+          exit 0
+        fi
+        
+        # Commit and push
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add benchmarks/
+        git commit -m "Update benchmark results [skip ci]"
+        git push

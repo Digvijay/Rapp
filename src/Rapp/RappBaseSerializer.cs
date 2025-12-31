@@ -173,10 +173,34 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     /// </remarks>
     public T Deserialize(ReadOnlySequence<byte> source)
     {
-        if (source.Length < 8) return default!;
+        if (source.Length < 8)
+        {
+            if (RappConfiguration.EnableTelemetry)
+            {
+                RappMetrics.RecordDeserializationError("insufficient_length", TypeName);
+            }
+            return default!;
+        }
+
         Span<byte> header = stackalloc byte[8];
         source.Slice(0, 8).CopyTo(header);
-        if (BinaryPrimitives.ReadUInt64LittleEndian(header) != SchemaHash) return default!;
+        var actualHash = BinaryPrimitives.ReadUInt64LittleEndian(header);
+
+        if (actualHash != SchemaHash)
+        {
+            if (RappConfiguration.EnableTelemetry)
+            {
+                RappMetrics.RecordSchemaMismatch(TypeName, SchemaHash, actualHash);
+            }
+
+            if (RappConfiguration.ThrowOnSchemaMismatch)
+            {
+                throw new RappSchemaMismatchException(TypeName, SchemaHash, actualHash);
+            }
+
+            return default!;
+        }
+
         return MemoryPackSerializer.Deserialize<T>(source.Slice(8))!;
     }
 }

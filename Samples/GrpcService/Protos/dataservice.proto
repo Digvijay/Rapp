@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcService";
+
+package dataservice;
+
+service DataService {
+  rpc GetData (DataRequest) returns (DataReply);
+  rpc ListData (ListDataRequest) returns (ListDataReply);
+}
+
+message DataRequest {
+  int32 id = 1;
+}
+
+message DataReply {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  int64 timestamp = 4;
+}
+
+message ListDataRequest {
+  int32 page_size = 1;
+  int32 page_number = 2;
+}
+
+message ListDataReply {
+  repeated DataReply items = 1;
+  int32 total_count = 2;
+}
