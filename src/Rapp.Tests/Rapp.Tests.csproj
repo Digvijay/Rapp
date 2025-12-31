@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);EXTEXP0018;IL2026;IL2072;IL2075</NoWarn>
+    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

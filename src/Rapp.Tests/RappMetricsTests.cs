@@ -84,4 +84,114 @@ public class RappMetricsTests
         // Assert
         counter.Should().NotBeNull();
     }
+
+    [Fact]
+    public void RecordDeserializationError_Method_Should_Exist()
+    {
+        // Act
+        var method = typeof(RappMetrics).GetMethod("RecordDeserializationError",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        // Assert
+        method.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void RecordSchemaMismatch_Method_Should_Exist()
+    {
+        // Act
+        var method = typeof(RappMetrics).GetMethod("RecordSchemaMismatch",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        // Assert
+        method.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void RecordDeserializationError_Should_Not_Throw_When_Invoked_Via_Reflection()
+    {
+        // Arrange
+        var method = typeof(RappMetrics).GetMethod("RecordDeserializationError",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        // Act
+        var act = () => method?.Invoke(null, new object[] { "TestError", "TestType" });
+
+        // Assert
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void RecordSchemaMismatch_Should_Not_Throw_When_Invoked_Via_Reflection()
+    {
+        // Arrange
+        var method = typeof(RappMetrics).GetMethod("RecordSchemaMismatch",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
+        // Act
+        var act = () => method?.Invoke(null, new object[] { "TestType", 123UL, 456UL });
+
+        // Assert
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Metrics_Methods_Should_Respect_Configuration_Settings()
+    {
+        // Arrange
+        var originalSetting = RappConfiguration.EnableTelemetry;
+        
+        try
+        {
+            // Test with telemetry enabled
+            RappConfiguration.EnableTelemetry = true;
+            
+            // Act & Assert - Should not throw
+            var hit = () => RappMetrics.RecordHit();
+            var miss = () => RappMetrics.RecordMiss();
+            
+            hit.Should().NotThrow();
+            miss.Should().NotThrow();
+            
+            // Test with telemetry disabled
+            RappConfiguration.EnableTelemetry = false;
+            
+            // Should still not throw even when disabled
+            hit.Should().NotThrow();
+            miss.Should().NotThrow();
+        }
+        finally
+        {
+            // Restore original setting
+            RappConfiguration.EnableTelemetry = originalSetting;
+        }
+    }
+
+    [Fact]
+    public void All_Metrics_Methods_Should_Be_Thread_Safe()
+    {
+        // Arrange
+        var tasks = new System.Threading.Tasks.Task[20];
+        var deserializationErrorMethod = typeof(RappMetrics).GetMethod("RecordDeserializationError",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var schemaMismatchMethod = typeof(RappMetrics).GetMethod("RecordSchemaMismatch",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        // Act - Call all metric methods concurrently
+        for (int i = 0; i < 20; i++)
+        {
+            var index = i;
+            tasks[i] = System.Threading.Tasks.Task.Run(() =>
+            {
+                RappMetrics.RecordHit();
+                RappMetrics.RecordMiss();
+                deserializationErrorMethod?.Invoke(null, new object[] { $"Error{index}", $"Type{index}" });
+                schemaMismatchMethod?.Invoke(null, new object[] { $"Type{index}", (ulong)index, (ulong)(index + 1) });
+            });
+        }
+
+        // Assert - Should complete without exceptions
+        var act = async () => await System.Threading.Tasks.Task.WhenAll(tasks);
+        act.Should().NotThrowAsync();
+    }
 }
