@@ -42,7 +42,7 @@ jobs:
         dotnet run -c Release --no-build -- --exporters json markdown
         
     - name: Store benchmark results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: benchmark-results
         path: |

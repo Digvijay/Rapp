@@ -40,7 +40,7 @@ jobs:
         dotnet pack src/Rapp.Gen/Rapp.Gen.csproj -c Release -o ./artifacts
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nuget-packages
         path: ./artifacts/*.nupkg
