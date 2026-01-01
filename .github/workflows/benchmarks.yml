@@ -39,32 +39,40 @@ jobs:
     - name: Run Benchmarks
       run: |
         cd src/Rapp.Benchmark
-        dotnet run -c Release --no-build -- --exporters json markdown
+        dotnet run -c Release --no-build -- --exporters markdown csv html
         
     - name: Store benchmark results
       uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
         path: |
-          BenchmarkDotNet.Artifacts/results/*.json
-          BenchmarkDotNet.Artifacts/results/*.md
+          src/Rapp.Benchmark/BenchmarkDotNet.Artifacts/results/*.md
+          src/Rapp.Benchmark/BenchmarkDotNet.Artifacts/results/*.csv
+          src/Rapp.Benchmark/BenchmarkDotNet.Artifacts/results/*.html
 
-    - name: Compare benchmarks
+    - name: Comment PR with benchmark results
       if: github.event_name == 'pull_request'
-      uses: benchmark-action/github-action-benchmark@v1
+      uses: actions/github-script@v7
       with:
-        tool: 'benchmarkdotnet'
-        output-file-path: BenchmarkDotNet.Artifacts/results/Benchmarks-report.json
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        comment-on-alert: true
-        alert-threshold: '150%'
-        fail-on-alert: false
+        script: |
+          const fs = require('fs');
+          const path = 'src/Rapp.Benchmark/BenchmarkDotNet.Artifacts/results/Benchmarks-report-github.md';
+          
+          if (fs.existsSync(path)) {
+            const markdown = fs.readFileSync(path, 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Benchmark Results\n\n${markdown}`
+            });
+          }
 
     - name: Update benchmark results in repo
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         # Copy results to benchmarks directory
-        cp -r BenchmarkDotNet.Artifacts/results/* benchmarks/
+        cp -r src/Rapp.Benchmark/BenchmarkDotNet.Artifacts/results/* benchmarks/
         
         # Check if there are changes
         if git diff --quiet benchmarks/; then
