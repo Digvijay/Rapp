@@ -168,16 +168,19 @@ Based on BenchmarkDotNet analysis (.NET 10.0, Intel Core i7):
 
 | Serializer | Serialization | Deserialization | Payload Size |
 |------------|---------------|-----------------|--------------|
-| **Rapp** | 689.6 ns | 1,173.1 ns | ~40% of JSON |
-| **MemoryPack** | 399.7 ns | 746.8 ns | ~40% of JSON |
-| **System.Text.Json** | 3,260.3 ns | 10,957.5 ns | 100% (baseline) |
+| **Rapp** | 397.2 ns | 240.9 ns | ~40% of JSON |
+| **MemoryPack (raw)** | 197.0 ns | 180.0 ns | ~33% of JSON |
+| **System.Text.Json** | 1,764.1 ns | 4,238.1 ns | 100% (baseline) |
+
+**HybridCache Integration:** Rapp 436.9ns (single), 30.5μs (100 ops, 80% hit). MemoryPack 416.5ns (single), 44.1μs (100 ops, 80% hit).
 
 ## Key Takeaways
 
 1. **MemoryPack** offers excellent raw performance but requires strict schema compatibility
-2. **Rapp** adds ~3% overhead for enterprise-grade safety and observability
-3. **System.Text.Json** provides safety but with significant performance penalties
-4. **Rapp** represents the optimal balance for cloud-native .NET 10 applications
+2. **Rapp** adds 102% serialize / 34% deserialize overhead for enterprise-grade safety and observability
+3. **System.Text.Json** provides safety but with significant performance penalties (4.4× slower serialize, 17.6× slower deserialize vs Rapp)
+4. **HybridCache:** Rapp is **31% faster** than MemoryPack in realistic workloads (30.5μs vs 44.1μs)
+5. **Compile-time optimizations** make Rapp production-ready for enterprise .NET 10 applications
 
 ## Production Deployment Safety
 

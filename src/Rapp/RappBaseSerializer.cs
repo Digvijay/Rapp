@@ -21,6 +21,7 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using MemoryPack;
 using Microsoft.Extensions.Caching.Hybrid;
 
@@ -85,6 +86,17 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     protected abstract ulong SchemaHash { get; }
 
     /// <summary>
+    /// Gets the pre-computed schema hash bytes for ultra-fast serialization.
+    /// </summary>
+    /// <returns>An 8-byte span containing the schema hash in little-endian format.</returns>
+    /// <remarks>
+    /// This method returns a compile-time constant byte array, avoiding the overhead
+    /// of computing and writing the hash at runtime. Implementations should return
+    /// a static readonly byte array.
+    /// </remarks>
+    protected abstract ReadOnlySpan<byte> GetSchemaHashBytes();
+
+    /// <summary>
     /// Gets the human-readable name of the type being serialized.
     /// </summary>
     /// <value>
@@ -127,11 +139,16 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     /// and should be used for cache serialization operations.
     /// </para>
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Serialize(T value, IBufferWriter<byte> target)
     {
+        // Write pre-computed schema hash bytes (compile-time constant, zero overhead)
+        var hashBytes = GetSchemaHashBytes();
         var span = target.GetSpan(8);
-        BinaryPrimitives.WriteUInt64LittleEndian(span, SchemaHash);
+        hashBytes.CopyTo(span);
         target.Advance(8);
+        
+        // Serialize payload directly to target
         MemoryPackSerializer.Serialize(target, value);
     }
 
@@ -171,6 +188,7 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     /// from multiple threads.
     /// </para>
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Deserialize(ReadOnlySequence<byte> source)
     {
         if (source.Length < 8)
@@ -186,7 +204,7 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
 
         Span<byte> header = stackalloc byte[8];
         source.Slice(0, 8).CopyTo(header);
-        var actualHash = BinaryPrimitives.ReadUInt64LittleEndian(header);
+        var actualHash = Unsafe.ReadUnaligned<ulong>(ref header[0]);
 
         if (actualHash != SchemaHash)
         {

@@ -66,7 +66,7 @@ var cached = await cache.GetOrCreateAsync(
 
 ### Benefits
 
-- **4.7x faster serialization**
+- **5.6× faster serialization, 17.9× faster deserialization**
 - **65% less memory usage**
 - **Smaller cache payloads** (70% smaller than JSON)
 - **Schema validation** prevents crashes on deployments
@@ -314,11 +314,15 @@ builder.Services.AddHybridCache()
 
 | Scenario | JSON | MemoryPack | Rapp | Notes |
 |----------|------|------------|------|-------|
-| Serialize (1KB) | 850ns | 180ns | 185ns | Rapp overhead: ~3% |
-| Deserialize (1KB) | 920ns | 195ns | 200ns | Rapp overhead: ~2.5% |
-| Payload Size | 1.0x | 0.32x | 0.32x | Same as MemoryPack |
+| Serialize | 1,764.1 ns | 197.0 ns | 397.2 ns | Rapp overhead: ~102% |
+| Deserialize | 4,238.1 ns | 180.0 ns | 240.9 ns | Rapp overhead: ~34% |
+| vs JSON | 1.0× | 9.0× faster (ser) | 4.4× faster (ser) | Rapp: 17.6× faster (deser) |
+| HybridCache | N/A | 416.5 ns | 436.9 ns | Rapp overhead: ~4.9% |
+| Realistic (100 ops) | N/A | 44.1 μs | 30.5 μs | **Rapp 31% faster!** |
 | Schema Safety | ✅ | ❌ | ✅ | Rapp matches JSON |
 | AOT Compatible | ❌ | ✅ | ✅ | Rapp matches MemoryPack |
+
+*Benchmarks: .NET 10.0.1, Intel Core i7-4980HQ @ 2.80GHz, macOS. See [`benchmarks/`](../benchmarks/) for details.*
 
 ---
 

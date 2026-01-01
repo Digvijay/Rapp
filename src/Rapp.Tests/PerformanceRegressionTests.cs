@@ -212,7 +212,9 @@ public class PerformanceRegressionTests
 
     private class TestPerformanceSerializer : RappBaseSerializer<string>
     {
+        private static readonly byte[] _hashBytes = BitConverter.GetBytes(987654321UL);
         protected override ulong SchemaHash => 987654321UL;
         protected override string TypeName => "string";
+        protected override ReadOnlySpan<byte> GetSchemaHashBytes() => _hashBytes;
     }
 }

@@ -22,6 +22,7 @@ using BenchmarkDotNet.Running;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Rapp;
 using System.Buffers;
 using System.Text.Json;
@@ -47,6 +48,22 @@ public partial class TestDataDirect
     public List<int>? Numbers { get; set; }
 }
 
+// Rapp serializer for HybridCache
+public class RappHybridSerializer : IHybridCacheSerializer<TestData>
+{
+    private readonly TestDataRappSerializer _serializer = new();
+
+    public void Serialize(TestData value, IBufferWriter<byte> target)
+    {
+        _serializer.Serialize(value, target);
+    }
+
+    public TestData Deserialize(ReadOnlySequence<byte> source)
+    {
+        return _serializer.Deserialize(source);
+    }
+}
+
 // MemoryPack serializer for HybridCache
 public class MemoryPackHybridSerializer : IHybridCacheSerializer<TestDataDirect>
 {
@@ -61,35 +78,17 @@ public class MemoryPackHybridSerializer : IHybridCacheSerializer<TestDataDirect>
     }
 }
 
-// System.Text.Json serializer for HybridCache
-public class JsonHybridSerializer : IHybridCacheSerializer<TestDataDirect>
-{
-    public static readonly JsonSerializerOptions _options = new JsonSerializerOptions
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
-    public void Serialize(TestDataDirect value, IBufferWriter<byte> target)
-    {
-        using var writer = new Utf8JsonWriter(target);
-        JsonSerializer.Serialize(writer, value, _options);
-    }
-
-    public TestDataDirect Deserialize(ReadOnlySequence<byte> source)
-    {
-        var reader = new Utf8JsonReader(source);
-        return JsonSerializer.Deserialize<TestDataDirect>(ref reader, _options)!;
-    }
-}
-
 public class Benchmarks
 {
     private TestData? _testData;
     private TestDataDirect? _testDataDirect;
+    private byte[]? _rappSerialized;
+    private byte[]? _memoryPackSerialized;
+    private byte[]? _jsonSerialized;
     private IMemoryCache? _memoryCache;
     private HybridCache? _hybridCache;
-    private IServiceProvider? _services;
     private string[] _cacheKeys = null!;
+    private IHost? _host;
 
     [GlobalSetup]
     public void Setup()
@@ -110,6 +109,15 @@ public class Benchmarks
             Numbers = Enumerable.Range(0, 100).ToList()
         };
 
+        // Pre-serialize for accurate deserialization benchmarks
+        var serializer = new TestDataRappSerializer();
+        var writer = new ArrayBufferWriter<byte>();
+        serializer.Serialize(_testData, writer);
+        _rappSerialized = writer.WrittenSpan.ToArray();
+        
+        _memoryPackSerialized = MemoryPack.MemoryPackSerializer.Serialize(_testDataDirect);
+        _jsonSerialized = JsonSerializer.SerializeToUtf8Bytes(_testDataDirect);
+
         // Create cache keys for realistic cache simulation
         _cacheKeys = new string[1000];
         for (int i = 0; i < _cacheKeys.Length; i++)
@@ -117,26 +125,35 @@ public class Benchmarks
             _cacheKeys[i] = $"key_{i}";
         }
 
-        var services = new ServiceCollection();
-        services.AddMemoryCache();
-#pragma warning disable EXTEXP0018 // AddHybridCache is experimental
-        services.AddHybridCache()
-            .UseRappForTestData()
+        // Setup services using Host.CreateApplicationBuilder (provides keyed services support for HybridCache)
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddHybridCache()
+            .AddSerializer<TestData, RappHybridSerializer>()
             .AddSerializer<TestDataDirect, MemoryPackHybridSerializer>();
-#pragma warning restore EXTEXP0018
-        _services = services.BuildServiceProvider();
+        
+        _host = builder.Build();
+        
+        // Get services from host
+        _memoryCache = _host.Services.GetRequiredService<IMemoryCache>();
+        _hybridCache = _host.Services.GetRequiredService<HybridCache>();
 
-        _memoryCache = _services.GetRequiredService<IMemoryCache>();
-        _hybridCache = _services.GetRequiredService<HybridCache>();
-
-        // Pre-populate some cache entries for realistic hit/miss patterns
-        for (int i = 0; i < 100; i++)
+        // Pre-populate some cache entries for realistic hit/miss patterns (80% hit rate)
+        for (int i = 0; i < 800; i++)
         {
             var key = _cacheKeys[i];
             _memoryCache.Set(key, _testData, TimeSpan.FromMinutes(5));
         }
     }
 
+    [GlobalCleanup]
+    public void Cleanup()
+    {
+        _host?.Dispose();
+    }
+
+    // ========== Pure Serialization Benchmarks (6) ==========
+    
     [Benchmark]
     public byte[] RappSerialize()
     {
@@ -150,10 +167,10 @@ public class Benchmarks
     [Benchmark]
     public TestData RappDeserialize()
     {
-        var data = RappSerialize();
+        if (_rappSerialized is null) throw new InvalidOperationException();
         var serializer = new TestDataRappSerializer();
-        var sequence = new ReadOnlySequence<byte>(data);
-        return serializer.Deserialize(sequence)!;
+        var sequence = new ReadOnlySequence<byte>(_rappSerialized);
+        return serializer.Deserialize(sequence);
     }
 
     [Benchmark]
@@ -166,82 +183,89 @@ public class Benchmarks
     [Benchmark]
     public TestDataDirect MemoryPackDeserialize()
     {
-        var data = MemoryPackSerialize();
-        return MemoryPack.MemoryPackSerializer.Deserialize<TestDataDirect>(data)!;
+        if (_memoryPackSerialized is null) throw new InvalidOperationException();
+        return MemoryPack.MemoryPackSerializer.Deserialize<TestDataDirect>(_memoryPackSerialized)!;
     }
 
     [Benchmark]
     public byte[] JsonSerialize()
     {
         if (_testDataDirect is null) throw new InvalidOperationException();
-        return JsonSerializer.SerializeToUtf8Bytes(_testDataDirect, JsonHybridSerializer._options);
+        return JsonSerializer.SerializeToUtf8Bytes(_testDataDirect);
     }
 
     [Benchmark]
     public TestDataDirect JsonDeserialize()
     {
-        var data = JsonSerialize();
-        return JsonSerializer.Deserialize<TestDataDirect>(data, JsonHybridSerializer._options)!;
+        if (_jsonSerialized is null) throw new InvalidOperationException();
+        return JsonSerializer.Deserialize<TestDataDirect>(_jsonSerialized)!;
     }
 
+    // ========== HybridCache Integration Benchmarks (3) ==========
+
     [Benchmark]
-    public async Task<TestData> HybridCache_GetOrCreate_Rapp()
+    public async Task<TestData> HybridCache_Rapp()
     {
         if (_hybridCache is null || _testData is null) throw new InvalidOperationException();
-        return await _hybridCache.GetOrCreateAsync("test_key_rapp", _ => ValueTask.FromResult(_testData));
+        return await _hybridCache.GetOrCreateAsync(
+            "test_key_rapp",
+            _ => ValueTask.FromResult(_testData!));
     }
 
     [Benchmark]
-    public async Task<TestDataDirect> HybridCache_GetOrCreate_MemoryPack()
+    public async Task<TestDataDirect> HybridCache_MemoryPack()
     {
         if (_hybridCache is null || _testDataDirect is null) throw new InvalidOperationException();
-        return await _hybridCache.GetOrCreateAsync("test_key_memorypack", _ => ValueTask.FromResult(_testDataDirect));
+        return await _hybridCache.GetOrCreateAsync(
+            "test_key_memorypack",
+            _ => ValueTask.FromResult(_testDataDirect!));
     }
 
     [Benchmark]
-    public TestData MemoryCache_GetOrCreate()
+    public TestData DirectMemoryCache()
     {
         if (_memoryCache is null || _testData is null) throw new InvalidOperationException();
-        return _memoryCache.GetOrCreate("test_key_memory", entry =>
+        return _memoryCache.GetOrCreate("test_key_direct", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromMinutes(5);
             return _testData;
         })!;
     }
 
-    // Realistic cache performance benchmark with hit/miss patterns
+    // ========== Realistic Cache Workload Benchmarks (3) ==========
+
     [Benchmark]
-    public async Task RealisticCacheWorkload_Rapp()
+    public async Task RealisticWorkload_HybridCache_Rapp()
     {
         if (_hybridCache is null || _testData is null) throw new InvalidOperationException();
-
-        // Simulate 80% hit rate, 20% miss rate
+        
+        // Simulate 100 cache operations with 80% hit rate
         for (int i = 0; i < 100; i++)
         {
             var key = _cacheKeys[Random.Shared.Next(_cacheKeys.Length)];
-            await _hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(_testData));
+            await _hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(_testData!));
         }
     }
 
     [Benchmark]
-    public async Task RealisticCacheWorkload_MemoryPack()
+    public async Task RealisticWorkload_HybridCache_MemoryPack()
     {
         if (_hybridCache is null || _testDataDirect is null) throw new InvalidOperationException();
-
-        // Simulate 80% hit rate, 20% miss rate
+        
+        // Simulate 100 cache operations with 80% hit rate
         for (int i = 0; i < 100; i++)
         {
             var key = _cacheKeys[Random.Shared.Next(_cacheKeys.Length)];
-            await _hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(_testDataDirect));
+            await _hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(_testDataDirect!));
         }
     }
 
     [Benchmark]
-    public void RealisticCacheWorkload_Memory()
+    public void RealisticWorkload_DirectMemory()
     {
         if (_memoryCache is null || _testData is null) throw new InvalidOperationException();
 
-        // Simulate 80% hit rate, 20% miss rate
+        // Simulate 100 cache operations with 80% hit rate
         for (int i = 0; i < 100; i++)
         {
             var key = _cacheKeys[Random.Shared.Next(_cacheKeys.Length)];

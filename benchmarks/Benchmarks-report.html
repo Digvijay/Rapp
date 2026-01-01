@@ -2,7 +2,7 @@
 <html lang='en'>
 <head>
 <meta charset='utf-8' />
-<title>Benchmarks-20251231-054406</title>
+<title>Benchmarks-20260101-005550</title>
 
 <style type="text/css">
 	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
@@ -22,18 +22,20 @@ Intel Core i7-4980HQ CPU 2.80GHz (Haswell), 1 CPU, 8 logical and 4 physical core
 <pre><code></code></pre>
 
 <table>
-<thead><tr><th>Method                      </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Median</th>
+<thead><tr><th>Method                            </th><th>Mean  </th><th>Error </th><th>StdDev </th><th>Median</th>
 </tr>
-</thead><tbody><tr><td>RappSerialize</td><td>582.9 ns</td><td>48.95 ns</td><td>143.56 ns</td><td>558.8 ns</td>
-</tr><tr><td>RappDeserialize</td><td>813.6 ns</td><td>48.54 ns</td><td>140.81 ns</td><td>806.7 ns</td>
-</tr><tr><td>MemoryPackSerialize</td><td>275.2 ns</td><td>19.61 ns</td><td>56.57 ns</td><td>260.0 ns</td>
-</tr><tr><td>MemoryPackDeserialize</td><td>609.7 ns</td><td>51.33 ns</td><td>149.73 ns</td><td>611.2 ns</td>
-</tr><tr><td>HybridCache_GetOrCreate_Rapp</td><td>769.7 ns</td><td>80.86 ns</td><td>238.40 ns</td><td>741.2 ns</td>
-</tr><tr><td>HybridCache_GetOrCreate_MemoryPack</td><td>755.5 ns</td><td>54.44 ns</td><td>153.56 ns</td><td>736.1 ns</td>
-</tr><tr><td>MemoryCache_GetOrCreate</td><td>106.9 ns</td><td>6.29 ns</td><td>18.56 ns</td><td>103.2 ns</td>
-</tr><tr><td>RealisticCacheWorkload_Rapp</td><td>95,447.7 ns</td><td>6,210.52 ns</td><td>18,214.38 ns</td><td>87,959.7 ns</td>
-</tr><tr><td>RealisticCacheWorkload_MemoryPack</td><td>85,583.3 ns</td><td>4,315.02 ns</td><td>12,587.12 ns</td><td>81,206.2 ns</td>
-</tr><tr><td>RealisticCacheWorkload_Memory</td><td>17,453.4 ns</td><td>617.79 ns</td><td>1,711.89 ns</td><td>16,991.7 ns</td>
+</thead><tbody><tr><td>RappSerialize</td><td>397.23 ns</td><td>11.577 ns</td><td>33.771 ns</td><td>397.37 ns</td>
+</tr><tr><td>RappDeserialize</td><td>240.85 ns</td><td>4.884 ns</td><td>12.072 ns</td><td>240.53 ns</td>
+</tr><tr><td>MemoryPackSerialize</td><td>196.96 ns</td><td>4.010 ns</td><td>6.002 ns</td><td>196.42 ns</td>
+</tr><tr><td>MemoryPackDeserialize</td><td>180.01 ns</td><td>3.654 ns</td><td>8.754 ns</td><td>180.54 ns</td>
+</tr><tr><td>JsonSerialize</td><td>1,764.09 ns</td><td>30.938 ns</td><td>31.771 ns</td><td>1,771.27 ns</td>
+</tr><tr><td>JsonDeserialize</td><td>4,238.09 ns</td><td>87.943 ns</td><td>248.044 ns</td><td>4,213.97 ns</td>
+</tr><tr><td>HybridCache_Rapp</td><td>436.93 ns</td><td>8.138 ns</td><td>7.992 ns</td><td>434.61 ns</td>
+</tr><tr><td>HybridCache_MemoryPack</td><td>416.51 ns</td><td>17.887 ns</td><td>51.321 ns</td><td>438.44 ns</td>
+</tr><tr><td>DirectMemoryCache</td><td>93.88 ns</td><td>6.428 ns</td><td>18.751 ns</td><td>90.44 ns</td>
+</tr><tr><td>RealisticWorkload_HybridCache_Rapp</td><td>30,483.58 ns</td><td>517.234 ns</td><td>672.550 ns</td><td>30,243.31 ns</td>
+</tr><tr><td>RealisticWorkload_HybridCache_MemoryPack</td><td>44,092.34 ns</td><td>4,565.780 ns</td><td>13,462.307 ns</td><td>46,787.07 ns</td>
+</tr><tr><td>RealisticWorkload_DirectMemory</td><td>12,969.63 ns</td><td>253.903 ns</td><td>451.313 ns</td><td>12,965.60 ns</td>
 </tr></tbody></table>
 </body>
 </html>

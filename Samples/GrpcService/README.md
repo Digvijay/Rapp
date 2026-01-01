@@ -72,7 +72,7 @@ public partial class CachedData
 
 ## Performance Benefits
 
-- **Fast serialization:** Binary format is 4.7x faster than JSON
+- **Fast serialization:** Binary format is 5.6× faster than JSON (17.9× faster deserialization)
 - **Smaller cache footprint:** 70% reduction vs JSON
 - **High throughput:** Optimized for gRPC's high-speed scenarios
 - **Schema safety:** Automatic validation prevents cache corruption

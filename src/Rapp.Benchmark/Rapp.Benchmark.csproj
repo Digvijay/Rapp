@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
   </ItemGroup>
 
@@ -15,8 +16,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>NU1510;IL2026;IL3050</NoWarn>
-    <!-- Enable Rapp telemetry for benchmarking -->
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
+    <!-- Telemetry disabled for production-accurate benchmarks -->
   </PropertyGroup>
 
 </Project>

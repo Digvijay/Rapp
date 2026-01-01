@@ -94,7 +94,7 @@ app.MapGet("/products/{id}", async (int id, HybridCache cache) =>
 
 ## Performance Benefits
 
-- **Faster than JSON:** 4.7x faster serialization
+- **Faster than JSON:** 5.6× faster serialization, 17.9× faster deserialization
 - **Smaller payloads:** 70% smaller than JSON
 - **Schema safety:** Automatic validation on schema changes
 

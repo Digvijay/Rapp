@@ -160,7 +160,9 @@ public class ThreadSafetyTests
 
     private class ThreadSafeTestSerializer : RappBaseSerializer<string>
     {
+        private static readonly byte[] _hashBytes = BitConverter.GetBytes(555666777UL);
         protected override ulong SchemaHash => 555666777UL;
         protected override string TypeName => "string";
+        protected override ReadOnlySpan<byte> GetSchemaHashBytes() => _hashBytes;
     }
 }

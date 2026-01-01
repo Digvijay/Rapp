@@ -8,15 +8,17 @@ Intel Core i7-4980HQ CPU 2.80GHz (Haswell), 1 CPU, 8 logical and 4 physical core
 
 
 ```
-| Method                             | Mean        | Error       | StdDev       | Median      |
-|----------------------------------- |------------:|------------:|-------------:|------------:|
-| RappSerialize                      |    582.9 ns |    48.95 ns |    143.56 ns |    558.8 ns |
-| RappDeserialize                    |    813.6 ns |    48.54 ns |    140.81 ns |    806.7 ns |
-| MemoryPackSerialize                |    275.2 ns |    19.61 ns |     56.57 ns |    260.0 ns |
-| MemoryPackDeserialize              |    609.7 ns |    51.33 ns |    149.73 ns |    611.2 ns |
-| HybridCache_GetOrCreate_Rapp       |    769.7 ns |    80.86 ns |    238.40 ns |    741.2 ns |
-| HybridCache_GetOrCreate_MemoryPack |    755.5 ns |    54.44 ns |    153.56 ns |    736.1 ns |
-| MemoryCache_GetOrCreate            |    106.9 ns |     6.29 ns |     18.56 ns |    103.2 ns |
-| RealisticCacheWorkload_Rapp        | 95,447.7 ns | 6,210.52 ns | 18,214.38 ns | 87,959.7 ns |
-| RealisticCacheWorkload_MemoryPack  | 85,583.3 ns | 4,315.02 ns | 12,587.12 ns | 81,206.2 ns |
-| RealisticCacheWorkload_Memory      | 17,453.4 ns |   617.79 ns |  1,711.89 ns | 16,991.7 ns |
+| Method                                   | Mean         | Error        | StdDev        | Median       |
+|----------------------------------------- |-------------:|-------------:|--------------:|-------------:|
+| RappSerialize                            |    397.23 ns |    11.577 ns |     33.771 ns |    397.37 ns |
+| RappDeserialize                          |    240.85 ns |     4.884 ns |     12.072 ns |    240.53 ns |
+| MemoryPackSerialize                      |    196.96 ns |     4.010 ns |      6.002 ns |    196.42 ns |
+| MemoryPackDeserialize                    |    180.01 ns |     3.654 ns |      8.754 ns |    180.54 ns |
+| JsonSerialize                            |  1,764.09 ns |    30.938 ns |     31.771 ns |  1,771.27 ns |
+| JsonDeserialize                          |  4,238.09 ns |    87.943 ns |    248.044 ns |  4,213.97 ns |
+| HybridCache_Rapp                         |    436.93 ns |     8.138 ns |      7.992 ns |    434.61 ns |
+| HybridCache_MemoryPack                   |    416.51 ns |    17.887 ns |     51.321 ns |    438.44 ns |
+| DirectMemoryCache                        |     93.88 ns |     6.428 ns |     18.751 ns |     90.44 ns |
+| RealisticWorkload_HybridCache_Rapp       | 30,483.58 ns |   517.234 ns |    672.550 ns | 30,243.31 ns |
+| RealisticWorkload_HybridCache_MemoryPack | 44,092.34 ns | 4,565.780 ns | 13,462.307 ns | 46,787.07 ns |
+| RealisticWorkload_DirectMemory           | 12,969.63 ns |   253.903 ns |    451.313 ns | 12,965.60 ns |
