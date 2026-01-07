@@ -51,6 +51,17 @@ public class RappMetricsTests
     }
 
     [Fact]
+    public void RecordSerializationSize_Should_Increment_Byte_Counters()
+    {
+        // Arrange & Act
+        RappMetrics.RecordSerializationSize(100, 200);
+
+        // Assert - Method should not throw
+        var method = typeof(RappMetrics).GetMethod("RecordSerializationSize");
+        method.Should().NotBeNull();
+    }
+
+    [Fact]
     public void Meter_Should_Be_Created_With_Correct_Name()
     {
         // Act

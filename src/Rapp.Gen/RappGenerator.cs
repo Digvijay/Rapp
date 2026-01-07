@@ -32,16 +32,11 @@ namespace Rapp.Gen
 /// Minimal test generator to verify analyzer loading.
 /// </summary>
 [Generator]
-public class TestGenerator : ISourceGenerator
+public class TestGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // No-op
-    }
-
-    public void Execute(GeneratorExecutionContext context)
-    {
-        context.AddSource("TestGenerated.g.cs", "// Test generated code");
+        context.RegisterPostInitializationOutput(ctx => ctx.AddSource("TestGenerated.g.cs", "// Test generated code"));
     }
 }
 

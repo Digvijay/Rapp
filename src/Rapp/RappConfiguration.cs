@@ -75,8 +75,8 @@ public static class RappConfiguration
     /// avoid leaking internal type information in error messages.
     /// </para>
     /// </remarks>
-    public static bool EnableDetailedErrors { get; set; } = false;
-
+    public static bool EnableDetailedErrors { get; set; }
+    
     /// <summary>
     /// Gets or sets whether schema validation failures should return default
     /// values or throw exceptions.
@@ -98,5 +98,5 @@ public static class RappConfiguration
     /// for immediate feedback on schema issues.
     /// </para>
     /// </remarks>
-    public static bool ThrowOnSchemaMismatch { get; set; } = false;
+    public static bool ThrowOnSchemaMismatch { get; set; }
 }

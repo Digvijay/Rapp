@@ -95,6 +95,9 @@ public static class RappMetrics
     /// </para>
     /// </remarks>
     private static readonly Counter<long> CacheMisses = Meter.CreateCounter<long>("rapp_cache_misses_total", "Total number of cache misses");
+    private static readonly Counter<long> RappBytes = Meter.CreateCounter<long>("rapp_bytes_total", "Total bytes stored using Rapp");
+    private static readonly Counter<long> JsonBytes = Meter.CreateCounter<long>("json_bytes_equivalent", "Total bytes if stored using JSON");
+
 
     /// <summary>
     /// Records a cache hit event.
@@ -133,6 +136,15 @@ public static class RappMetrics
     /// </para>
     /// </remarks>
     public static void RecordMiss() => CacheMisses.Add(1);
+
+    /// <summary>
+    /// Records serialization sizes for savings comparison.
+    /// </summary>
+    public static void RecordSerializationSize(long binarySize, long jsonSize)
+    {
+        RappBytes.Add(binarySize);
+        JsonBytes.Add(jsonSize);
+    }
 
     /// <summary>
     /// Records a deserialization error event.

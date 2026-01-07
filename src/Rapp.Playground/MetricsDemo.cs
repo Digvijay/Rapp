@@ -77,7 +77,7 @@ public static class MetricsDemo
         // First access - cache miss (data needs to be computed)
         var result1 = await cache.GetOrCreateAsync("demo-key-1",
             async ct => {
-                await Task.Delay(10); // Simulate computation
+                await Task.Delay(10, ct); // Simulate computation
                 return new DemoData { Id = 1, Name = "First Item", Timestamp = DateTime.UtcNow };
             });
 
@@ -86,7 +86,7 @@ public static class MetricsDemo
         // Second access - cache hit (data retrieved from cache)
         var result2 = await cache.GetOrCreateAsync("demo-key-1",
             async ct => {
-                await Task.Delay(10);
+                await Task.Delay(10, ct);
                 return new DemoData { Id = 1, Name = "First Item", Timestamp = DateTime.UtcNow };
             });
 
@@ -95,7 +95,7 @@ public static class MetricsDemo
         // Different key - cache miss
         var result3 = await cache.GetOrCreateAsync("demo-key-2",
             async ct => {
-                await Task.Delay(5);
+                await Task.Delay(5, ct);
                 return new DemoData { Id = 2, Name = "Second Item", Timestamp = DateTime.UtcNow };
             });
 
@@ -148,7 +148,7 @@ public static class MetricsDemo
                 // In real code, you might record: CustomMetrics.RecordBusinessOperationFailure();
             }
 
-            await Task.Delay(1); // Simulate work
+            await Task.Delay(1, default); // Simulate work
         }
 
         return summary;
@@ -187,7 +187,7 @@ public static class MetricsDemo
             await cache.GetOrCreateAsync(key,
                 async ct => {
                     benchmark.CacheMisses++;
-                    await Task.Delay(1); // Simulate computation
+                    await Task.Delay(1, default); // Simulate computation
                     return new DemoData { Id = i, Name = $"Benchmark-{i}", Timestamp = DateTime.UtcNow };
                 });
 
@@ -244,7 +244,7 @@ public static class MetricsDemo
 
                     await cache.GetOrCreateAsync(key,
                         async ct => {
-                            await Task.Delay(Random.Shared.Next(1, 5)); // Variable computation time
+                            await Task.Delay(Random.Shared.Next(1, 5), default); // Variable computation time
                             return new DemoData { Id = user * 1000 + op, Name = $"Load-{user}-{op}", Timestamp = DateTime.UtcNow };
                         });
                 }

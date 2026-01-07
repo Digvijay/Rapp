@@ -27,7 +27,10 @@ using Rapp;
 using System.Buffers;
 using System.Text.Json;
 
-BenchmarkRunner.Run<Benchmarks>();
+BenchmarkRunner.Run<Rapp.Benchmark.Benchmarks>(args: args);
+
+namespace Rapp.Benchmark
+{
 
 [RappCache]
 [MemoryPack.MemoryPackable]
@@ -276,4 +279,5 @@ public class Benchmarks
             });
         }
     }
+}
 }

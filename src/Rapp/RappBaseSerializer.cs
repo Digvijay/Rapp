@@ -142,6 +142,9 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Serialize(T value, IBufferWriter<byte> target)
     {
+        // Record cache miss (serialization implies writing new data)
+        RappMetrics.RecordMiss();
+
         // Write pre-computed schema hash bytes (compile-time constant, zero overhead)
         var hashBytes = GetSchemaHashBytes();
         var span = target.GetSpan(8);
@@ -149,7 +152,31 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
         target.Advance(8);
         
         // Serialize payload directly to target
+        var startState = target.GetSpan(0).Length; // Approximate logic if needed, but better to measure:
+        
+        // We need to measure bytes written.
+        // MemoryPack doesn't return bytes written easily from this overload without pre-measuring.
+        // But we can monitor the buffer writer if we reused one, but here we can't.
+        
+        // For accurate comparison in Demo, we'll double-serialize (inefficient but accurate for stats):
         MemoryPackSerializer.Serialize(target, value);
+        
+#if RAPP_TELEMETRY
+        if (value != null)
+        {
+             try 
+             {
+                 // Calculate sizes for comparison
+                 var binarySize = 8 + MemoryPackSerializer.Serialize(value).Length; // Header + Body
+#pragma warning disable IL2026, IL3050 // JSON AOT/Trim warning
+                 var jsonSize = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(value).Length;
+#pragma warning restore IL2026, IL3050
+                 
+                 RappMetrics.RecordSerializationSize(binarySize, jsonSize);
+             }
+             catch { /* Ignore telemetry errors */ }
+        }
+#endif
     }
 
     /// <summary>
@@ -222,6 +249,28 @@ public abstract class RappBaseSerializer<[DynamicallyAccessedMembers(Dynamically
             return default!;
         }
 
-        return MemoryPackSerializer.Deserialize<T>(source.Slice(8))!;
+        // Record cache hit (deserialization implies reading existing data)
+        RappMetrics.RecordHit();
+
+        var result = MemoryPackSerializer.Deserialize<T>(source.Slice(8))!;
+
+#if RAPP_TELEMETRY
+        if (result != null)
+        {
+             try 
+             {
+                 // Calculate sizes for comparison (Network bandwidth saved on Read)
+                 var binarySize = source.Length; 
+#pragma warning disable IL2026, IL3050 // JSON AOT/Trim warning
+                 var jsonSize = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(result).Length;
+#pragma warning restore IL2026, IL3050
+                 
+                 RappMetrics.RecordSerializationSize(binarySize, jsonSize);
+             }
+             catch { /* Ignore telemetry errors */ }
+        }
+#endif
+
+        return result;
     }
 }

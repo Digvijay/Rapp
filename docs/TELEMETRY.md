@@ -49,7 +49,20 @@ RappMetrics.RecordHit();
 
 // Counter: rapp_cache_misses_total
 RappMetrics.RecordMiss();
+
+// Counter: rapp_bytes_total
+// Counter: json_bytes_equivalent
+// Records serialization sizes for cost analysis
+RappMetrics.RecordSerializationSize(binarySize, jsonSize);
 ```
+
+### Cost Analysis Metrics
+
+When `RAPP_TELEMETRY` is enabled, Rapp also calculates:
+- **rapp_bytes_total**: Total bytes serialized/deserialized using Rapp
+- **json_bytes_equivalent**: Equivalent size if JSON were used
+
+> ⚠️ **Performance Warning**: Calculating `json_bytes_equivalent` requires double-serialization (serializing to JSON in parallel) to measure the size difference. This introduces significant overhead and should **only be used for analysis/debugging**, never in latency-critical production paths.
 
 ### Schema Validation (Internal)
 

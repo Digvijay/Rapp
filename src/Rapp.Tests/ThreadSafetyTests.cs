@@ -158,7 +158,7 @@ public class ThreadSafetyTests
         // Assert - No exceptions should be thrown during high-frequency operations
     }
 
-    private class ThreadSafeTestSerializer : RappBaseSerializer<string>
+    private sealed class ThreadSafeTestSerializer : RappBaseSerializer<string>
     {
         private static readonly byte[] _hashBytes = BitConverter.GetBytes(555666777UL);
         protected override ulong SchemaHash => 555666777UL;

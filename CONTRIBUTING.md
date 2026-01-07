@@ -42,6 +42,7 @@ dotnet run
 
 ### Code Style
 - Follow C# coding conventions
+- **Zero Warnings Policy**: The project treats warnings as errors (`TreatWarningsAsErrors=true`). Ensure your code builds without any warnings.
 - Use meaningful variable and method names
 - Add XML documentation comments to public APIs
 - Keep methods focused and single-purpose

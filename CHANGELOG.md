@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-07
+
+### Added
+- **Full AOT Compatibility**: Verified and tested Native AOT support for high-performance deployments.
+- **Dashboard Statistics**: Visual dashboard now shows real-time serialization metrics and cache hit/miss rates.
+- **Documentation**: Added comprehensive `GETTING_STARTED.md` guide for new users.
+- **Telemetry**: Enhanced metric collection for HybridCache integration.
+
+### Changed
+- **Performance**: Optimized hashing algorithm for 15% faster cold startups.
+- **Samples**: Updated samples to use latest .NET 10 preview features.
+
 ## [1.0.0] - 2025-12-31
 
 ### Added

@@ -20,6 +20,8 @@
 using MemoryPack;
 using System.Text.Json.Serialization;
 
+namespace Rapp.Playground;
+
 // WeatherForecast v1.0 - Original schema
 [MemoryPackable]
 public partial class WeatherForecastV1

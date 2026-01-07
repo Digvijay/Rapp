@@ -28,13 +28,12 @@ public static class RappDashboardExtensions
     private static readonly Meter Meter = new("Rapp");
     private static long _hits;
     private static long _misses;
+    private static long _rappBytes;
+    private static long _jsonBytes;
 
     static RappDashboardExtensions()
     {
-        var hitsCounter = Meter.CreateCounter<long>("rapp_cache_hits_total");
-        var missesCounter = Meter.CreateCounter<long>("rapp_cache_misses_total");
-
-        // Create a listener to collect metrics
+        // Listener initialization
         var listener = new MeterListener();
         listener.InstrumentPublished = (instrument, listener) =>
         {
@@ -45,14 +44,10 @@ public static class RappDashboardExtensions
         };
         listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, state) =>
         {
-            if (instrument.Name == "rapp_cache_hits_total")
-            {
-                Interlocked.Add(ref _hits, measurement);
-            }
-            else if (instrument.Name == "rapp_cache_misses_total")
-            {
-                Interlocked.Add(ref _misses, measurement);
-            }
+            if (instrument.Name == "rapp_cache_hits_total") Interlocked.Add(ref _hits, measurement);
+            else if (instrument.Name == "rapp_cache_misses_total") Interlocked.Add(ref _misses, measurement);
+            else if (instrument.Name == "rapp_bytes_total") Interlocked.Add(ref _rappBytes, measurement);
+            else if (instrument.Name == "json_bytes_equivalent") Interlocked.Add(ref _jsonBytes, measurement);
         });
         listener.Start();
     }
@@ -63,49 +58,77 @@ public static class RappDashboardExtensions
         {
             var hits = Interlocked.Read(ref _hits);
             var misses = Interlocked.Read(ref _misses);
+            var rappBytes = Interlocked.Read(ref _rappBytes);
+            var jsonBytes = Interlocked.Read(ref _jsonBytes);
+            
             var totalRequests = hits + misses;
             var hitRate = totalRequests > 0 ? (double)hits / totalRequests * 100 : 0;
-            
             var version = "1.0.0";
+
+            // Return JSON if requested
+            if (context.Request.Query["format"] == "json" || 
+                context.Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                var stats = new RappDashboardStats(
+                    Hits: hits,
+                    Misses: misses,
+                    RappBytes: rappBytes,
+                    JsonBytes: jsonBytes,
+                    TotalRequests: totalRequests,
+                    HitRate: hitRate,
+                    Version: version
+                );
+
+                return Results.Json(stats, DashboardJsonContext.Default.RappDashboardStats);
+            }
             
             var html = $@"
 <!DOCTYPE html>
 <html>
 <head>
     <title>Rapp Dashboard</title>
-    <meta http-equiv='refresh' content='0.5'>
+    <meta http-equiv='refresh' content='1'>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; }}
-        .stat {{ background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }}
-        .stat strong {{ color: #333; }}
-        .hit-rate {{ color: { (hitRate >= 80 ? "green" : hitRate >= 50 ? "orange" : "red") }; }}
+        body {{ 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background: #1e293b; /* Matches demo dark theme */
+            color: #f1f5f9;
+        }}
+        .stat {{ 
+            background: #334155; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            border: 1px solid #475569;
+        }}
+        .stat strong {{ color: #94a3b8; display: block; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em; }}
+        .val {{ font-size: 1.5em; font-weight: bold; margin-top: 5px; }}
+        .hit-rate {{ color: { (hitRate >= 80 ? "#10b981" : hitRate >= 50 ? "#f59e0b" : "#ef4444") }; }}
+        h1 {{ font-size: 1.2rem; margin-top: 0; color: #6366f1; }}
+        h2 {{ font-size: 1rem; margin-top: 20px; border-bottom: 1px solid #334155; padding-bottom: 5px; }}
+        ul {{ padding-left: 20px; color: #cbd5e1; }}
+        li {{ margin-bottom: 5px; }}
     </style>
 </head>
 <body>
-    <h1>Rapp Dashboard</h1>
+    <h1>Rapp Internal Stats</h1>
+    
     <div class='stat'>
-        <strong>Status:</strong> Active<br>
-        <strong>Version:</strong> {version}<br>
-        <strong>Description:</strong> High-performance caching serializer for .NET
+        <strong>Cache Hits</strong>
+        <div class='val'>{hits}</div>
+    </div>
+    <div class='stat'>
+        <strong>Cache Misses</strong>
+        <div class='val'>{misses}</div>
+    </div>
+    <div class='stat'>
+        <strong>Hit Rate</strong>
+        <div class='val hit-rate'>{hitRate:F1}%</div>
     </div>
     
-    <h2>Cache Statistics</h2>
-    <div class='stat'>
-        <strong>Total Requests:</strong> {totalRequests}<br>
-        <strong>Cache Hits:</strong> {hits}<br>
-        <strong>Cache Misses:</strong> {misses}<br>
-        <strong>Hit Rate:</strong> <span class='hit-rate'>{hitRate:F2}%</span>
-    </div>
-    
-    <h2>Features</h2>
-    <ul>
-        <li>MemoryPack integration</li>
-        <li>Source-generated serializers</li>
-        <li>HybridCache compatibility</li>
-        <li>Zero-overhead telemetry</li>
-    </ul>
-    
-    <p>Last updated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC</p>
+    <p style='color: #64748b; font-size: 0.8rem; text-align: right;'>Updates every 1s</p>
 </body>
 </html>";
             
