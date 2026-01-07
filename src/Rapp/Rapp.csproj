@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Rapp</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>Digvijay Chauhan</Authors>
     <Description>Schema-aware binary serialization for safe, high-performance .NET caching</Description>
     <PackageTags>caching;serialization;binary;performance;aot;schema-evolution</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Copyright>Copyright (c) 2025 Digvijay Chauhan</Copyright>
+    <Copyright>Copyright (c) 2026 Digvijay Chauhan</Copyright>
     <PackageProjectUrl>https://github.com/Digvijay/Rapp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Digvijay/Rapp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v1.0.0 - Initial release of Rapp: Schema-aware binary serialization for enterprise .NET caching. Features cryptographic schema validation, AOT compatibility, and optional zero-overhead telemetry. Telemetry is EXCLUDED from the NuGet package by default for maximum performance - define RAPP_TELEMETRY to enable monitoring features.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.1.0 - Features full AOT compatibility, new Dashboard statistics, and enhanced documentation. Includes automatic schema validation and zero-overhead telemetry options.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
@@ -21,6 +21,7 @@
     <!-- Define RAPP_TELEMETRY in your project to enable metrics -->
     <!-- Package Validation -->
     <EnablePackageValidation>true</EnablePackageValidation>
+    <IsAotCompatible>true</IsAotCompatible>
     <GenerateCompatibilitySuppressionFile>true</GenerateCompatibilitySuppressionFile>
     <!-- XML Documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Version>1.1.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>IL2026;IL3050</NoWarn>
+    <IsAotCompatible>true</IsAotCompatible>
     <!-- Enable Rapp telemetry for dashboard functionality -->
     <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
+    <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
   </PropertyGroup>
 
   <ItemGroup>

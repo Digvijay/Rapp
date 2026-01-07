@@ -6,5 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsAotCompatible>true</IsAotCompatible>
+    <DefineConstants>RAPP_TELEMETRY</DefineConstants>
   </PropertyGroup>
 </Project>

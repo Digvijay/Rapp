@@ -35,6 +35,7 @@ When `RAPP_TELEMETRY` is defined:
 ```csharp
 RappMetrics.RecordHit();    // Counter: rapp_cache_hits_total
 RappMetrics.RecordMiss();   // Counter: rapp_cache_misses_total
+RappMetrics.RecordSerializationSize(bin, json); // Counters: rapp_bytes_total, json_bytes_equivalent
 ```
 
 ## Performance Impact

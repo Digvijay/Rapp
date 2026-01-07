@@ -54,6 +54,7 @@ Rapp allows applications to use aggressive binary optimization while guaranteein
 Implementing Rapp transforms the economics of the caching layer without requiring code changes from feature teams.
 
 * **Infrastructure Cost Reduction:** By switching to safe binary payloads, Rapp reduces Redis memory usage and network egress traffic by **30% to 50%**.
+* **Financial Visibility:** Real-time **Cost Analysis metrics** provide immediate feedback on bandwidth savings (binary vs JSON), justifying the investment.
 * **Operational Stability:** It eliminates the class of errors known as "Serialization Crashes," decoupling deployment schedules from cache invalidation strategies.
 * **Performance:** It unlocks the full throughput of Native AOT, achieving **30.5μs for 100 cache operations (80% hit rate)** — **31% faster than raw MemoryPack** (44.1μs) with **102% serialize overhead / 34% deserialize overhead** for schema safety, while providing enterprise-grade observability and AOT compatibility. vs JSON: **4.4× faster serialization, 17.6× faster deserialization**¹.
 

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapp - gRPC Service Demo</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #06b6d4;
+            --bg-dark: #0f172a;
+            /* Matched to ASP.NET demo */
+            --bg-card: #1e293b;
+            /* Matched to ASP.NET demo */
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Background */
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.15), transparent 25%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--text-main), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        .badges {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .badge {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 svg {
+            color: var(--primary);
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Form Elements */
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        button.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        button.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        button.run-sim {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        button.run-sim.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Dashboard Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-value.good {
+            color: var(--success);
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Log / Terminal View */
+        .terminal {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-hit {
+            color: var(--success);
+        }
+
+        .log-miss {
+            color: var(--warning);
+        }
+
+        .log-meta {
+            color: #666;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-light"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">/// Rapp.gRPC</div>
+            <div class="badges">
+                <span class="badge">Protobuf</span>
+                <span class="badge">JSON Transcoding</span>
+                <span class="badge">AOT Ready</span>
+            </div>
+            <div
+                style="margin-left: auto; font-family: 'JetBrains Mono'; font-size: 0.85rem; color: var(--text-muted);">
+                <span id="connectionStatus"
+                    style="width: 8px; height: 8px; background: var(--text-muted); border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+                <span id="connText">Standby</span>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <!-- Controls -->
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
+                            </path>
+                        </svg>
+                        Load Generator
+                    </h2>
+
+                    <div class="control-group">
+                        <label>Concurrent Users</label>
+                        <input type="number" id="simConcurrency" value="5" min="1" max="50">
+
+                        <label>Req/s per User</label>
+                        <input type="number" id="simRate" value="2" min="1" max="20">
+
+                        <button id="simBtn" class="run-sim" onclick="toggleSimulation()">Start Simulation</button>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); margin: 1.5rem 0; padding-top: 1.5rem;">
+                        <label>Manual Unary Call (ID)</label>
+                        <div style="display: flex; gap: 0.5rem">
+                            <input type="number" id="dataId" placeholder="1" value="1" style="margin-bottom:0">
+                            <button class="primary" onclick="manualFetch()" style="width: auto">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Savings -->
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Cost Savings
+                    </h2>
+                    <div class="metric-card"
+                        style="background: transparent; padding: 0; border: none; text-align: left;">
+                        <div class="metric-label">Storage / Network Saved</div>
+                        <div class="metric-value good" id="savingsPct">0%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+                            Rapp: <span id="rappBytes" style="color: var(--text-main)">0 B</span><br>
+                            JSON: <span id="jsonBytes" style="color: var(--text-main)">0 B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content -->
+            <div class="content">
+                <!-- Metrics -->
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        Performance Telemetry
+                    </h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Cache Hits</div>
+                            <div class="metric-value" style="color: var(--success)" id="hits">0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Cache Misses</div>
+                            <div class="metric-value" style="color: var(--warning)" id="misses">0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Avg Latency</div>
+                            <div class="metric-value" id="latency">-</div>
+                            <div class="metric-sub">ms</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Throughput</div>
+                            <div class="metric-value" id="throughput">0</div>
+                            <div class="metric-sub">req/s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terminal -->
+                <div class="card" style="display: flex; flex-direction: column; flex: 1;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            Activity Log
+                        </h2>
+                        <button onclick="clearLog()"
+                            style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.8rem; background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Clear</button>
+                    </div>
+                    <div class="terminal" id="terminal">
+                        <div class="log-entry">> System ready. Waiting for traffic...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let isRunning = false;
+        let simIntervals = [];
+        let reqCountWindow = 0;
+        let latenciesOfWindow = [];
+
+        // Polling for backend stats
+        setInterval(async () => {
+            try {
+                const res = await fetch('/rapp?format=json');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('hits').innerText = data.hits;
+                    document.getElementById('misses').innerText = data.misses;
+
+                    // Cost Savings
+                    document.getElementById('rappBytes').innerText = formatBytes(data.rappBytes || 0);
+                    document.getElementById('jsonBytes').innerText = formatBytes(data.jsonBytes || 0);
+
+                    if (data.jsonBytes > 0) {
+                        const saved = data.jsonBytes - data.rappBytes;
+                        const pct = (saved / data.jsonBytes * 100).toFixed(1);
+                        document.getElementById('savingsPct').innerText = `${pct}%`;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+            // Calculate throughput of client-side simulation
+            if (isRunning) {
+                document.getElementById('throughput').innerText = reqCountWindow;
+
+                if (latenciesOfWindow.length > 0) {
+                    const avg = latenciesOfWindow.reduce((a, b) => a + b, 0) / latenciesOfWindow.length;
+                    document.getElementById('latency').innerText = avg.toFixed(1);
+                }
+
+                // Reset window
+                reqCountWindow = 0;
+                latenciesOfWindow = [];
+            }
+        }, 1000);
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Simulation Controller
+        function toggleSimulation() {
+            const btn = document.getElementById('simBtn');
+            const statusDot = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connText');
+
+            if (isRunning) {
+                stopSimulation();
+                btn.innerText = 'Start Simulation';
+                btn.classList.remove('active');
+                statusDot.style.background = 'var(--text-muted)';
+                statusDot.style.boxShadow = 'none';
+                statusText.innerText = 'Standby';
+                log('System', 'Simulation stopped.');
+            } else {
+                startSimulation();
+                btn.innerText = 'Stop Simulation';
+                btn.classList.add('active');
+                statusDot.style.background = 'var(--success)';
+                statusDot.style.boxShadow = '0 0 10px var(--success)';
+                statusText.innerText = 'Generating Traffic';
+                log('System', 'Simulation started.');
+            }
+            isRunning = !isRunning;
+        }
+
+        function startSimulation() {
+            const users = parseInt(document.getElementById('simConcurrency').value) || 1;
+            const rate = parseInt(document.getElementById('simRate').value) || 1;
+            const intervalMs = 1000 / rate;
+
+            for (let i = 0; i < users; i++) {
+                const interval = setInterval(() => {
+                    const isHit = Math.random() > 0.2;
+                    const id = isHit
+                        ? Math.floor(Math.random() * 20) + 1
+                        : Math.floor(Math.random() * 100) + 100;
+
+                    executeRequest(id);
+                }, intervalMs + (Math.random() * 50)); // Jitter
+                simIntervals.push(interval);
+            }
+        }
+
+        function stopSimulation() {
+            simIntervals.forEach(clearInterval);
+            simIntervals = [];
+        }
+
+        async function manualFetch() {
+            const id = document.getElementById('dataId').value;
+            await executeRequest(id, true);
+        }
+
+        async function executeRequest(id, manual = false) {
+            const start = performance.now();
+            try {
+                // Call via JSON Transcoding (HTTP -> gRPC)
+                const res = await fetch(`/v1/data/${id}`);
+                const end = performance.now();
+                const dur = end - start;
+
+                if (manual || Math.random() > 0.95) { // Log 5% of requests to avoid spam
+                    log(res.status === 200 ? 'OK' : 'ERR', `GET /v1/data/${id} - ${dur.toFixed(1)}ms`, res.status === 200);
+                }
+
+                reqCountWindow++;
+                latenciesOfWindow.push(dur);
+
+            } catch (e) {
+                log('ERR', `Failed: ${e.message}`, false);
+            }
+        }
+
+        function log(prefix, msg, success = true) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = `log-entry ${success ? 'log-hit' : 'log-miss'}`;
+
+            const time = new Date().toLocaleTimeString();
+
+            div.innerHTML = `<span class="log-meta">[${time}]</span> <span style="font-weight: 700; margin-right: 10px; color: ${success ? 'var(--success)' : (prefix === 'ERR' ? 'var(--warning)' : '#fff')}">${prefix}</span> ${msg}`;
+            term.insertBefore(div, term.firstChild);
+
+            // Keep log size managed
+            if (term.children.length > 50) {
+                term.removeChild(term.lastChild);
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('terminal').innerHTML = '';
+        }
+
+    </script>
+</body>
+
+</html>

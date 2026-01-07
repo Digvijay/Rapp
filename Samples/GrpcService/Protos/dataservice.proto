@@ -4,9 +4,19 @@ option csharp_namespace = "GrpcService";
 
 package dataservice;
 
+import "google/api/annotations.proto";
+
 service DataService {
-  rpc GetData (DataRequest) returns (DataReply);
-  rpc ListData (ListDataRequest) returns (ListDataReply);
+  rpc GetData (DataRequest) returns (DataReply) {
+    option (google.api.http) = {
+      get: "/v1/data/{id}"
+    };
+  }
+  rpc ListData (ListDataRequest) returns (ListDataReply) {
+    option (google.api.http) = {
+      get: "/v1/data"
+    };
+  }
 }
 
 message DataRequest {

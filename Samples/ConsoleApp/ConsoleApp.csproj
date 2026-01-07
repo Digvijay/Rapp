@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <!-- Enable Rapp telemetry for demo purposes -->
     <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>

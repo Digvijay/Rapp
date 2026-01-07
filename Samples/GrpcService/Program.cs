@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Caching.Hybrid;
 using Rapp;
 using MemoryPack;
+using GrpcService;
+using Rapp.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,13 +17,19 @@ builder.Services.AddHybridCache(options =>
     };
 }).UseRappForCachedData();
 
-builder.Services.AddGrpc();
+
+
+builder.Services.AddGrpc().AddJsonTranscoding();
 
 var app = builder.Build();
 
-app.MapGrpcService<DataServiceImpl>();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
-app.MapGet("/", () => "gRPC service running. Use a gRPC client to communicate.");
+app.MapGrpcService<DataServiceImpl>();
+app.MapRappDashboard();
+
+app.MapGet("/", () => "gRPC service running. Check /index.html for the advanced dashboard.");
 
 app.Run();
 

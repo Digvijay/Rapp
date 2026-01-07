@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapp - High Performance .NET Caching</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Background */
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .badges {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* Main Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h2 svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            width: 100%;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        button.secondary:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        /* Results */
+        .result-area {
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'Monaco', monospace;
+        }
+
+        .metric-value.good {
+            color: var(--success);
+        }
+
+        .metric-value.warn {
+            color: var(--warning);
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            /* flex-grow: 1; removed to save vertical space */
+            height: 120px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #d4d4d4;
+            border: 1px solid var(--border);
+        }
+
+        .key-token {
+            color: #9cdcfe;
+        }
+
+        .string-token {
+            color: #ce9178;
+        }
+
+        .number-token {
+            color: #b5cea8;
+        }
+
+        .bool-token {
+            color: #569cd6;
+        }
+
+        /* Stats Panel */
+        .stats-panel iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-light"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">⚡ Rapp Playground</div>
+            <div class="badges">
+                <span class="badge">.NET 10</span>
+                <span class="badge">HybridCache</span>
+                <span class="badge">Binary Serialization</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Sidebar / Controls -->
+            <div class="sidebar">
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        Test Operations
+                    </h2>
+
+                    <div class="control-group">
+                        <label>Fetch Product (ID: 1-10)</label>
+                        <div class="input-group">
+                            <input type="number" id="prodId" value="1" min="1" max="100">
+                            <button onclick="fetchProduct()">Fetch</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Fetch Customer (ID: 1-100)</label>
+                        <div class="input-group">
+                            <input type="number" id="custId" value="42" min="1" max="100">
+                            <button onclick="fetchCustomer()">Fetch</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Actions</label>
+                        <button class="secondary" onclick="window.location.reload()"
+                            style="width: 100%; margin-bottom: 0.5rem;">Reset Demo</button>
+
+                        <div style="border-top: 1px solid var(--border); margin: 1rem 0; padding-top: 1rem;">
+                            <label>Auto-Simulation</label>
+                            <button id="simBtn" class="secondary" onclick="toggleSimulation()" style="width: 100%">Start
+                                Simulation</button>
+                            <div id="simStatus"
+                                style="font-size: 0.8rem; color: var(--success); text-align: center; margin-top: 0.5rem; height: 1.2em;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="statsCard">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Global Stats
+                    </h2>
+
+                    <div class="metrics-bar" style="grid-template-columns: 1fr 1fr; margin-bottom: 0;">
+                        <div class="metric">
+                            <div class="metric-label">Cache Hits</div>
+                            <div class="metric-value good" id="globalHits">-</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Cache Misses</div>
+                            <div class="metric-value warn" id="globalMisses">-</div>
+                        </div>
+                    </div>
+
+                    <div class="metric" style="margin-top: 1rem;">
+                        <div class="metric-label">Total Hit Rate</div>
+                        <div class="metric-value" id="globalHitRate">- %</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Cost Savings
+                    </h2>
+                    <div class="metric">
+                        <div class="metric-label">Storage / Network Saved</div>
+                        <div class="metric-value good" id="savingsPct">0%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
+                            Rapp: <span id="rappBytes">0</span> B <br>
+                            JSON: <span id="jsonBytes">0</span> B
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Results Area -->
+            <div class="main-content">
+                <div class="card result-area">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 17 10 11 14 15 20 9"></polyline>
+                            <line x1="20" y1="9" x2="20" y2="15"></line>
+                            <line x1="20" y1="9" x2="14" y2="9"></line>
+                        </svg>
+                        Operation Result
+                    </h2>
+
+                    <div class="metrics-bar">
+                        <div class="metric">
+                            <div class="metric-label">Status</div>
+                            <div class="metric-value" id="status">-</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Time</div>
+                            <div class="metric-value" id="time">- ms</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Size (Approx)</div>
+                            <div class="metric-value" id="size">- B</div>
+                        </div>
+                    </div>
+
+                    <pre id="jsonOutput">// Click 'Fetch' to see results...
+// Rapp will automatically serialize/deserialize the response.</pre>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Activity Log
+                    </h2>
+                    <div id="activityLog"
+                        style="height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">
+                        <div style="padding: 2px 0;">> System Ready.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchProduct() {
+            const id = document.getElementById('prodId').value;
+            await runRequest(`/products/${id}`);
+        }
+
+        async function fetchCustomer() {
+            const id = document.getElementById('custId').value;
+            await runRequest(`/customers/${id}`);
+        }
+
+        async function runRequest(url, isSimulation = false) {
+            const start = performance.now();
+            const output = document.getElementById('jsonOutput');
+
+            if (!isSimulation) {
+                output.textContent = 'Loading...';
+                document.body.classList.add('loading');
+            }
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const end = performance.now();
+
+                // Update metrics only if not simulation (to prevent UI flicker)
+                if (!isSimulation) {
+                    document.getElementById('time').textContent = (end - start).toFixed(2) + ' ms';
+                    document.getElementById('status').textContent = res.status;
+                    document.getElementById('status').className = 'metric-value ' + (res.ok ? 'good' : 'warn');
+
+                    const jsonStr = JSON.stringify(data, null, 2);
+                    document.getElementById('size').textContent = new TextEncoder().encode(jsonStr).length + ' B';
+
+                    output.innerHTML = syntaxHighlight(jsonStr);
+                }
+
+                // Log activity (Throttle simulation logs to avoid browser hang if too fast? 5rps is fine)
+                logActivity(`${isSimulation ? '[SIM] ' : ''}Fetched ${url} (${(end - start).toFixed(1)}ms)`, res.ok ? 'hit' : 'miss');
+
+                // Refresh stats immediately if manual
+                if (!isSimulation) updateStats();
+            } catch (err) {
+                if (!isSimulation) output.textContent = 'Error: ' + err.message;
+                console.error(err);
+            } finally {
+                if (!isSimulation) document.body.classList.remove('loading');
+            }
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number-token';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key-token';
+                    } else {
+                        cls = 'string-token';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'bool-token';
+                } else if (/null/.test(match)) {
+                    cls = 'null-token';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        async function updateStats() {
+            try {
+                const res = await fetch('/rapp?format=json');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                document.getElementById('globalHits').textContent = data.hits;
+                document.getElementById('globalMisses').textContent = data.misses;
+                document.getElementById('globalHitRate').textContent = data.hitRate.toFixed(1) + '%';
+
+                // Savings
+                document.getElementById('rappBytes').textContent = formatBytes(data.rappBytes || 0);
+                document.getElementById('jsonBytes').textContent = formatBytes(data.jsonBytes || 0);
+
+                if (data.jsonBytes > 0) {
+                    const saved = data.jsonBytes - data.rappBytes;
+                    const pct = (saved / data.jsonBytes * 100).toFixed(1);
+                    document.getElementById('savingsPct').textContent = `${pct}% (${formatBytes(saved)} saved)`;
+                }
+
+                const hitRateEl = document.getElementById('globalHitRate');
+                if (data.hitRate >= 80) hitRateEl.className = 'metric-value good';
+                else if (data.hitRate >= 50) hitRateEl.className = 'metric-value warn';
+                else hitRateEl.className = 'metric-value';
+
+            } catch (e) {
+                console.error('Failed to fetch stats', e);
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function logActivity(msg, type = 'info') {
+            const log = document.getElementById('activityLog');
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            div.style.padding = '2px 0';
+            div.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+
+            let color = 'var(--text-muted)';
+            if (type === 'hit') color = 'var(--success)';
+            if (type === 'miss') color = 'var(--warning)';
+
+            div.innerHTML = `<span style="color: #666">[${time}]</span> <span style="color: ${color}">> ${msg}</span>`;
+
+            // Prepend
+            log.insertBefore(div, log.firstChild);
+
+            if (log.children.length > 50) log.removeChild(log.lastChild);
+        }
+
+        // Simulation Logic
+        let simulationInterval;
+
+        function toggleSimulation() {
+            const btn = document.getElementById('simBtn');
+            const status = document.getElementById('simStatus');
+
+            if (simulationInterval) {
+                // Stop
+                clearInterval(simulationInterval);
+                simulationInterval = null;
+                btn.textContent = 'Start Simulation';
+                btn.className = 'secondary';
+                status.textContent = '';
+            } else {
+                // Start
+                btn.textContent = 'Stop Simulation';
+                btn.className = ''; // primary
+                status.textContent = 'Running...';
+
+                simulationInterval = setInterval(async () => {
+                    // Random strategy: 70% chance to fetch existing item (hit), 30% new (miss/populating)
+                    // Product IDs 1-10 exist. Let's vary between 1-15.
+                    const randomId = Math.floor(Math.random() * 15) + 1;
+                    const type = Math.random() > 0.5 ? 'products' : 'customers';
+
+                    try {
+                        // Use runRequest in simulation mode (true)
+                        await runRequest(`/${type}/${randomId}`, true);
+                    } catch (e) {
+                        console.error('Sim error', e);
+                    }
+                }, 200); // 5 requests per second
+            }
+        }
+
+        // Start polling
+        setInterval(updateStats, 1000);
+        updateStats();
+    </script>
+</body>
+
+</html>

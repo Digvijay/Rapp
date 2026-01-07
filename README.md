@@ -133,6 +133,8 @@ dotnet add package Rapp
 
 ## ⚡ Quick Start
 
+> 📘 **New to Rapp?** Check out our step-by-step [Getting Started Guide](docs/GETTING_STARTED.md) for a comprehensive walkthrough.
+
 ### 1. Mark Your Cacheable Types
 
 Decorate DTOs with the `[RappCache]` attribute. The class must be `partial` to allow source generation.
@@ -233,6 +235,20 @@ Rapp is fully compatible with Native AOT compilation:
     <PublishAot>true</PublishAot>
 </PropertyGroup>
 ```
+
+```
+
+### 3. Native AOT Compatibility
+
+Rapp is **100% compatible with Native AOT** (Ahead-of-Time) compilation, making it ideal for serverless and high-performance cloud scenarios.
+
+**Why Rapp is AOT Ready:**
+- **Source Generation:** All serialization code is generated at compile-time using Roslyn 4.0 source generators.
+- **No Runtime Reflection:** Rapp avoids `System.Reflection` entirely for serialization paths, preventing AOT trim warnings.
+- **Static Analysis:** All types are analyzed during build, ensuring AOT linkers can see all used types.
+- **MemoryPack Foundation:** Built on top of MemoryPack, which is designed from the ground up for AOT.
+
+> **Note on Demos:** The sample applications (`AspNetCoreMinimalApi`, `GrpcService`) utilize `System.Text.Json` reflection-based serialization **solely for comparison purposes** (to calculate cost savings vs JSON). Because of this comparative logic, the demos themselves generate AOT warnings. However, the **Rapp library itself** is fully AOT compliant and can be used in strictly AOT-enforced projects (like the `ConsoleApp` sample configured for AOT).
 
 ## 🎯 Advanced Features
 
@@ -421,6 +437,7 @@ Rapp is open-source. We welcome contributions to expand the validation rule set 
 
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Dependencies & Versions](docs/DEPENDENCIES.md)
 - [Documentation](docs/)
 

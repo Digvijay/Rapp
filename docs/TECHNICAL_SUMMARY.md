@@ -105,6 +105,14 @@ Real-world caching scenarios with HybridCache demonstrate Rapp's production read
 | **Rapp vs JSON** | **4.4× faster** | **17.6× faster** |
 | **Rapp vs MemoryPack** | 102% overhead | 34% overhead |
 
+### 4.4 Real-Time Cost Analysis
+
+To validate storage and network savings, Rapp includes an optional cost analysis module (enabled via `RAPP_TELEMETRY`). This feature tracks:
+* **Binary Size (Rapp):** Actual bytes transmitted/stored.
+* **Equivalent JSON Size:** Calculated baseline for comparison.
+
+This telemetry powers the real-time "Cost Savings" dashboard, allowing teams to visualize the immediate ROI of adopting binary serialization (typically **40-60% bandwidth reduction**).
+
 ---
 
 ## 5. Comparison with Alternatives

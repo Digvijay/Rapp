@@ -10,6 +10,8 @@ Demonstrates Rapp integration with ASP.NET Core Minimal APIs.
 **Features:**
 - HybridCache configuration
 - RESTful API endpoints
+- **Interactive Dashboard** (at root URL)
+- **Real-time Cost Savings Analysis**
 - Schema evolution handling
 - Health checks
 
@@ -39,6 +41,9 @@ gRPC service using Rapp for high-performance caching.
 
 **Features:**
 - gRPC service implementation
+- **gRPC JSON Transcoding**
+- **Unified Rapp Dashboard**
+- **Cost Savings Metrics**
 - Binary serialization for gRPC messages
 - Distributed caching patterns
 - Load testing
