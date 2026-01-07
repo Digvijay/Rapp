@@ -1,11 +1,28 @@
 <Project>
   <PropertyGroup>
+    <!-- Core Language & Framework Settings -->
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Code Quality & Strictness -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <NoWarn>$(NoWarn);CA2007;CA1014;CA1707</NoWarn>
+
+    <!-- Global Feature Flags -->
     <IsAotCompatible>true</IsAotCompatible>
-    <DefineConstants>RAPP_TELEMETRY</DefineConstants>
+    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
+
+    <!-- Centralized Package Metadata -->
+    <Authors>Digvijay Chauhan</Authors>
+    <Copyright>Copyright (c) 2026 Digvijay Chauhan</Copyright>
+    <PackageProjectUrl>https://github.com/Digvijay/Rapp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Digvijay/Rapp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>

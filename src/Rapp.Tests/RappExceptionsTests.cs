@@ -100,7 +100,7 @@ public class RappExceptionsTests
 
         // Assert
         exception.Message.Should().ContainAny("Schema", "schema"); // Case insensitive check
-        exception.Message.ToLower().Should().ContainAny("mismatch", "validation", "failed", "incompatible");
+        exception.Message.ToLower(System.Globalization.CultureInfo.InvariantCulture).Should().ContainAny("mismatch", "validation", "failed", "incompatible");
     }
 
     [Fact]

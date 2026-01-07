@@ -34,7 +34,7 @@ var user = await cache.GetOrCreateAsync(
     {
         Console.WriteLine("  Cache MISS - fetching from 'database'...");
         await Task.Delay(100, ct);
-        return new UserData
+        return new Rapp.Samples.ConsoleApp.UserData
         {
             Id = userId,
             Name = "John Doe",
@@ -55,7 +55,7 @@ user = await cache.GetOrCreateAsync(
     {
         Console.WriteLine("  This shouldn't print - data is cached!");
         await Task.Delay(100, ct);
-        return new UserData { Id = userId, Name = "Cached", Email = "cached@example.com", CreatedAt = DateTime.UtcNow };
+        return new Rapp.Samples.ConsoleApp.UserData { Id = userId, Name = "Cached", Email = "cached@example.com", CreatedAt = DateTime.UtcNow };
     }
 );
 
@@ -67,7 +67,7 @@ Console.WriteLine("Demo 2: Performance Measurement");
 Console.WriteLine("--------------------------------");
 
 var iterations = 1000;
-var testData = new UserData
+var testData = new Rapp.Samples.ConsoleApp.UserData
 {
     Id = 999,
     Name = "Performance Test User",
@@ -99,7 +99,7 @@ user = await cache.GetOrCreateAsync(
     {
         Console.WriteLine("  Cache MISS after removal - fetching again...");
         await Task.Delay(100, ct);
-        return new UserData
+        return new Rapp.Samples.ConsoleApp.UserData
         {
             Id = userId,
             Name = "John Doe Refreshed",
@@ -114,13 +114,17 @@ Console.WriteLine($"  User: {user.Name} ({user.Email})\n");
 
 Console.WriteLine("Sample completed successfully!");
 
-// Domain model
-[RappCache]
-[MemoryPackable]
-public partial class UserData
+
+namespace Rapp.Samples.ConsoleApp
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    // Domain model
+    [RappCache]
+    [MemoryPackable]
+    public partial class UserData
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
 }

@@ -15,10 +15,10 @@ This document outlines all NuGet package dependencies used in the Rapp project, 
 
 | Package | Version | Status | Notes |
 |---------|---------|--------|-------|
-| `Microsoft.CodeAnalysis.CSharp` | `4.10.0` | ✅ Latest Compatible | Roslyn compiler API for C# |
-| `Microsoft.CodeAnalysis.Analyzers` | `3.3.4` | ✅ Latest Compatible | Roslyn code analysis rules |
+| `Microsoft.CodeAnalysis.CSharp` | `4.14.0` | ✅ Latest Compatible | Roslyn compiler API for C# |
+| `Microsoft.CodeAnalysis.Analyzers` | `3.11.0` | ✅ Latest Compatible | Roslyn code analysis rules |
 
-**Compatibility Note**: Roslyn analyzer packages have strict target framework requirements. Versions 4.14.0+ and 5.0.0+ require .NET 6.0+ and do not support .NET Standard 2.1 analyzers (RS1041 error). The current versions are the latest compatible with our analyzer architecture.
+**Compatibility Note**: Roslyn analyzer packages have strict target framework requirements. We use standard 2.0 compatible versions where applicable to ensure broad compatibility.
 
 ## 🧪 Testing & Benchmarking
 
@@ -93,7 +93,8 @@ dotnet restore Rapp.sln
 |------|--------|---------|
 | 2025-12-31 | Initial verification | All packages confirmed at latest compatible versions |
 | 2025-12-31 | Roslyn analyzer compatibility | Confirmed 4.10.0/3.3.4 are latest compatible with .NET Standard 2.1 |
+| 2026-01-07 | Update verification | All packages updated to latest. CodeAnalysis updated to 4.14.0/3.11.0. |
 
 ---
 
-*This document is automatically updated when package versions change. Last verified: December 31, 2025*
+*This document is automatically updated when package versions change. Last verified: January 7, 2026*

@@ -210,7 +210,7 @@ public class PerformanceRegressionTests
         stopwatch.ElapsedMilliseconds.Should().BeLessThan(500);
     }
 
-    private class TestPerformanceSerializer : RappBaseSerializer<string>
+    private sealed class TestPerformanceSerializer : RappBaseSerializer<string>
     {
         private static readonly byte[] _hashBytes = BitConverter.GetBytes(987654321UL);
         protected override ulong SchemaHash => 987654321UL;

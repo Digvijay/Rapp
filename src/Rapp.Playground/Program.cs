@@ -106,7 +106,7 @@ app.MapGet("/cache/simulate/{operations}", async (int operations, HybridCache ca
             // This will be a cache hit (if data exists)
             var result = await cache.GetOrCreateAsync(key, async ct =>
             {
-                await Task.Delay(1); // Simulate work
+                await Task.Delay(1, default); // Simulate work
                 return new WeatherForecast { Summary = $"Simulated-{i}" };
             });
             results.Add($"Hit: {result.Summary}");
@@ -117,7 +117,7 @@ app.MapGet("/cache/simulate/{operations}", async (int operations, HybridCache ca
             var uniqueKey = $"{key}-{Guid.NewGuid()}";
             var result = await cache.GetOrCreateAsync(uniqueKey, async ct =>
             {
-                await Task.Delay(1); // Simulate work
+                await Task.Delay(1, default); // Simulate work
                 return new WeatherForecast { Summary = $"New-{i}" };
             });
             results.Add($"Miss: {result.Summary}");
@@ -223,7 +223,7 @@ static async Task RunMetricsViewerAsync()
 }
 
 // Command-line metrics collector
-class CommandLineMetricsCollector
+sealed class CommandLineMetricsCollector : IDisposable
 {
     private MeterListener? _listener;
     private readonly Dictionary<string, long> _metricValues = new();
@@ -268,6 +268,12 @@ class CommandLineMetricsCollector
     }
 
     public void Stop()
+    {
+        _displayTimer.Change(Timeout.Infinite, Timeout.Infinite);
+        _listener?.DisableMeasurementEvents((Instrument)null!);
+    }
+    
+    public void Dispose()
     {
         _displayTimer.Dispose();
         _listener?.Dispose();
@@ -327,65 +333,74 @@ class CommandLineMetricsCollector
     }
 }
 
-// Original WeatherForecast class (v1.0) - Marked for Rapp caching
-// Note: Source generator is implemented but not executing due to .NET 10.0/Roslyn compatibility
-[RappCache]
-[MemoryPackable]
-public partial class WeatherForecast
+namespace Rapp.Playground
 {
-    public string? Summary { get; set; }
-}
-
-// Metrics demonstration service
-public class MetricsDemoService
-{
-    private readonly Meter _demoMeter;
-    private readonly Counter<long> _demoOperations;
-    private readonly Histogram<double> _demoDuration;
-    private long _totalOperations;
-
-    public MetricsDemoService()
+    // Original WeatherForecast class (v1.0) - Marked for Rapp caching
+    // Note: Source generator is implemented but not executing due to .NET 10.0/Roslyn compatibility
+    [RappCache]
+    [MemoryPackable]
+    public partial class WeatherForecast
     {
-        _demoMeter = new Meter("Rapp.Demo", "1.0.0");
-        _demoOperations = _demoMeter.CreateCounter<long>("rapp_demo_operations_total", "Total demo operations");
-        _demoDuration = _demoMeter.CreateHistogram<double>("rapp_demo_operation_duration", "ms", "Duration of demo operations");
+        public string? Summary { get; set; }
     }
 
-    public async Task<object> DemonstrateMetricsAsync()
+    // Metrics demonstration service
+    public class MetricsDemoService : IDisposable
     {
-        var stopwatch = Stopwatch.StartNew();
+        private readonly Meter _demoMeter;
+        private readonly Counter<long> _demoOperations;
+        private readonly Histogram<double> _demoDuration;
+        private long _totalOperations;
 
-        // Simulate some work
-        await Task.Delay(Random.Shared.Next(10, 100));
-
-        stopwatch.Stop();
-        _demoOperations.Add(1);
-        _demoDuration.Record(stopwatch.ElapsedMilliseconds);
-        Interlocked.Increment(ref _totalOperations);
-
-        return new
+        public MetricsDemoService()
         {
-            Message = "Metrics operation completed",
-            Duration = stopwatch.ElapsedMilliseconds,
-            TotalOperations = _totalOperations
-        };
-    }
+            _demoMeter = new Meter("Rapp.Demo", "1.0.0");
+            _demoOperations = _demoMeter.CreateCounter<long>("rapp_demo_operations_total", "Total demo operations");
+            _demoDuration = _demoMeter.CreateHistogram<double>("rapp_demo_operation_duration", "ms", "Duration of demo operations");
+        }
 
-    public object GetMetricsStats()
-    {
-        // Note: In a real application, you'd use a metrics listener to collect these values
-        // For demo purposes, we return what we can track internally
-        return new
+        public async Task<object> DemonstrateMetricsAsync()
         {
-            DemoOperations = _totalOperations,
-            RappCacheHits = "Use external metrics collector (Prometheus/OpenTelemetry)",
-            RappCacheMisses = "Use external metrics collector (Prometheus/OpenTelemetry)",
-            Note = "RappMetrics are published to System.Diagnostics.Metrics and require external collection"
-        };
-    }
+            var stopwatch = Stopwatch.StartNew();
 
-    public void ResetStats()
-    {
-        _totalOperations = 0;
+            // Simulate some work
+            await Task.Delay(Random.Shared.Next(10, 100));
+
+            stopwatch.Stop();
+            _demoOperations.Add(1);
+            _demoDuration.Record(stopwatch.ElapsedMilliseconds);
+            Interlocked.Increment(ref _totalOperations);
+
+            return new
+            {
+                Message = "Metrics operation completed",
+                Duration = stopwatch.ElapsedMilliseconds,
+                TotalOperations = _totalOperations
+            };
+        }
+
+        public object GetMetricsStats()
+        {
+            // Note: In a real application, you'd use a metrics listener to collect these values
+            // For demo purposes, we return what we can track internally
+            return new
+            {
+                DemoOperations = _totalOperations,
+                RappCacheHits = "Use external metrics collector (Prometheus/OpenTelemetry)",
+                RappCacheMisses = "Use external metrics collector (Prometheus/OpenTelemetry)",
+                Note = "RappMetrics are published to System.Diagnostics.Metrics and require external collection"
+            };
+        }
+
+        public void ResetStats()
+        {
+            _totalOperations = 0;
+        }
+
+        public void Dispose()
+        {
+            _demoMeter.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

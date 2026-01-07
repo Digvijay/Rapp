@@ -96,7 +96,7 @@ public class RappBaseSerializerTests
         result.Should().BeNull();
     }
 
-    private class TestSerializer : RappBaseSerializer<string>
+    private sealed class TestSerializer : RappBaseSerializer<string>
     {
         private static readonly byte[] _hashBytes = BitConverter.GetBytes(123456789UL);
         protected override ulong SchemaHash => 123456789UL;

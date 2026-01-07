@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Rapp;
 using Rapp.Dashboard;
 using MemoryPack;
+using Rapp.Samples.MinimalApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,24 +117,28 @@ static async Task<Customer> GetCustomerAsync(int id, CancellationToken ct)
     };
 }
 
-// Domain models with Rapp attributes
-[RappCache]
-[MemoryPackable]
-public partial class Product
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-    public string Category { get; set; } = string.Empty;
-    public bool InStock { get; set; }
-}
 
-[RappCache]
-[MemoryPackable]
-public partial class Customer
+namespace Rapp.Samples.MinimalApi
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    // Domain models with Rapp attributes
+    [RappCache]
+    [MemoryPackable]
+    public partial class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public bool InStock { get; set; }
+    }
+
+    [RappCache]
+    [MemoryPackable]
+    public partial class Customer
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
 }

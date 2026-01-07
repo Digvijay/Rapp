@@ -13,6 +13,6 @@ public record RappDashboardStats(
 );
 
 [JsonSerializable(typeof(RappDashboardStats))]
-internal partial class DashboardJsonContext : JsonSerializerContext
+internal sealed partial class DashboardJsonContext : JsonSerializerContext
 {
 }

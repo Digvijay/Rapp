@@ -6,16 +6,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
-    <PackageReference Include="System.Text.Json" Version="10.0.1" />
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>NU1510;IL2026;IL3050</NoWarn>
+    <NoWarn>$(NoWarn);NU1510;IL2026;IL3050</NoWarn>
     <!-- Telemetry disabled for production-accurate benchmarks -->
   </PropertyGroup>
 
