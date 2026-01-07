@@ -15,7 +15,7 @@ This document outlines all NuGet package dependencies used in the Rapp project, 
 
 | Package | Version | Status | Notes |
 |---------|---------|--------|-------|
-| `Microsoft.CodeAnalysis.CSharp` | `4.14.0` | ✅ Latest Compatible | Roslyn compiler API for C# |
+| `Microsoft.CodeAnalysis.CSharp` | `5.0.0` | ✅ Latest Compatible | Roslyn compiler API for C# |
 | `Microsoft.CodeAnalysis.Analyzers` | `3.11.0` | ✅ Latest Compatible | Roslyn code analysis rules |
 
 **Compatibility Note**: Roslyn analyzer packages have strict target framework requirements. We use standard 2.0 compatible versions where applicable to ensure broad compatibility.
