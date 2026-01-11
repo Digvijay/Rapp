@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-11
+
+### Added
+- **Ghost Reader**: A zero-copy, zero-allocation `ref struct` view over binary data for ultra-low latency access.
+- **Convenience Methods**: `ComputeSize()` and `ToBytes()` extension methods for generated Ghost types.
+- **Documentation**: New `docs/GHOST_READER.md` dedicated guide.
+- **Reliability**: Robust handling for nullable strings and buffer overflows in `RappWriter`.
+
 ## [1.1.0] - 2026-01-07
 
 ### Added
