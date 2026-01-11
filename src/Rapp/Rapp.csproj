@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Rapp</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Description>Schema-aware binary serialization for safe, high-performance .NET caching</Description>
     <PackageTags>caching;serialization;binary;performance;aot;schema-evolution</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v1.1.0 - Features full AOT compatibility, new Dashboard statistics, and enhanced documentation. Includes automatic schema validation and zero-overhead telemetry options.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.2.0 - Introduces Ghost Reader for zero-copy views. Includes automatic schema validation and zero-overhead telemetry options.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
