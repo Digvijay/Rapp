@@ -252,6 +252,22 @@ Rapp is **100% compatible with Native AOT** (Ahead-of-Time) compilation, making 
 
 ## 🎯 Advanced Features
 
+### 👻 The Ghost Reader (Zero-Copy View)
+
+Rapp includes a "Ghost Reader" feature for ultra-low latency scenarios (trading, gaming, IoT). Instead of deserializing objects on the heap, it creates a **Zero-Copy, Zero-Allocation** `ref struct` view over your raw binary data.
+
+```csharp
+// 1. Define
+[RappGhost]
+public class Tick { public double Price; public long Time; }
+
+// 2. Read (Zero Allocation)
+var ghost = new TickGhost(buffer);
+if (ghost.Price > 100.0) { ... } // instant access
+```
+
+[👉 Read the full Ghost Reader Documentation](docs/GHOST_READER.md)
+
 ### Integration with Existing Code
 
 Rapp works with your existing `HybridCache` setup - no code changes required:
