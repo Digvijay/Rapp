@@ -4,6 +4,9 @@ layout: home
 hero:
   name: Rapp
   text: Schema-Aware Binary Serialization for .NET
+  image:
+    src: /logo.svg
+    alt: Rapp Logo
   tagline: Bridging the gap between MemoryPack's raw performance and enterprise deployment safety requirements.
   actions:
     - theme: brand
