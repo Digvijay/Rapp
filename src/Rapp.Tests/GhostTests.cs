@@ -142,7 +142,7 @@ namespace Rapp.Tests
             var user = new User { Id = 5, Name = "Convenience", IsActive = true, Score = 5.5 };
             
             // 1. Easy Mode: ToBytes()
-            byte[] bytes = user.ToBytes();
+            byte[] bytes = user.ToBytes(); // codeql[cs/empty-collection] - False positive, ToBytes returns populated array
             
             // 2. Verify Size
             int expectedSize = 

@@ -87,11 +87,11 @@ Based on research from official repositories and creator documentation, Rapp occ
 
 | **Solution** | **Serialize** | **Realistic Workload** | **Schema Safety** | **Key Limitation** |
 |---|---|---|---|---|
-| **Rapp** | 397ns | **30.5μs** | ✅ Automatic | .NET only |
-| **MemoryPack** | 197ns | 44.1μs | ❌ Crashes on changes | *"Can't remove/reorder/change fields"* |
-| **MessagePack** | ~300ns | ~50μs | ⚠️ Manual | Cross-language overhead |
-| **protobuf-net** | ~700ns | ~150μs | ⚠️ IDL required | Null handling issues |
-| **JSON** | 1,764ns | ~250μs | ❌ N/A | Too slow |
+| **Rapp** | 397ns | **30.5μs** |  Automatic | .NET only |
+| **MemoryPack** | 197ns | 44.1μs |  Crashes on changes | *"Can't remove/reorder/change fields"* |
+| **MessagePack** | ~300ns | ~50μs |  Manual | Cross-language overhead |
+| **protobuf-net** | ~700ns | ~150μs |  IDL required | Null handling issues |
+| **JSON** | 1,764ns | ~250μs |  N/A | Too slow |
 
 #### 5.2 Market Validation
 
