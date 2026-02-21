@@ -1,11 +1,11 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-    base: '/',
+    base: '/Rapp/',
     title: "Rapp",
     description: "Schema-Aware Binary Serialization for .NET",
     head: [
-        ['link', { rel: 'icon', href: '/logo.svg' }]
+        ['link', { rel: 'icon', href: '/Rapp/logo.svg' }]
     ],
     ignoreDeadLinks: true,
     themeConfig: {
