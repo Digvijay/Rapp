@@ -146,7 +146,7 @@ Compares with System.Text.Json behavior:
 
 - **Schema Flexibility:** Handles missing/extra properties gracefully
 - **Performance Cost:** 4.7x slower serialization, 9.3x slower deserialization
-- **AOT Compatibility:** ✅ Demo uses source-generated JSON (AOT-compatible) vs. reflection mode (AOT-incompatible)
+- **AOT Compatibility:**  Demo uses source-generated JSON (AOT-compatible) vs. reflection mode (AOT-incompatible)
 - **Payload Bloat:** ~60% larger than binary formats
 
 **AOT Compatibility Note:** The demo uses `JsonSerializerContext` for AOT compatibility. Standard reflection-based JSON serialization would trigger IL2026/IL3050 warnings and fail AOT compilation.
@@ -157,10 +157,10 @@ Compares with System.Text.Json behavior:
 
 | Change Type | MemoryPack Behavior | Rapp Behavior |
 |-------------|-------------------|---------------|
-| **Add Property** | ✅ Compatible | ✅ Compatible |
-| **Remove Property** | ❌ Crash | ✅ Safe (cache miss) |
-| **Reorder Properties** | ❌ Crash | ✅ Safe (cache miss) |
-| **Change Property Type** | ❌ Crash | ✅ Safe (cache miss) |
+| **Add Property** |  Compatible |  Compatible |
+| **Remove Property** |  Crash |  Safe (cache miss) |
+| **Reorder Properties** |  Crash |  Safe (cache miss) |
+| **Change Property Type** |  Crash |  Safe (cache miss) |
 
 ### Performance Comparison
 

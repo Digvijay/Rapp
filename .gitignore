@@ -50,3 +50,8 @@ test-package
 # --- Internal Documentation ---
 docs/PUBLISHING.md
 docs/IMAGE_PROMPTS.md
+
+# VitePress
+node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache
