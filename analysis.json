@@ -1,0 +1,19 @@
+{
+  "Id": "0ef4933b-9225-4c5c-a49b-0ff9bd2875dd",
+  "Timestamp": "2026-01-20T11:54:48.738641Z",
+  "FileName": "msbuild.binlog",
+  "Graph": {
+    "Nodes": {},
+    "Edges": [],
+    "TotalWarnings": 0,
+    "RootCauses": []
+  },
+  "Summary": {
+    "TotalWarnings": 0,
+    "UniqueMethodsWithWarnings": 0,
+    "RootCauseCount": 0,
+    "WarningsByType": {},
+    "WarningsByAssembly": {},
+    "TopRootCauses": []
+  }
+}

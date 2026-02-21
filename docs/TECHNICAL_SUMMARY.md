@@ -129,10 +129,10 @@ This telemetry powers the real-time "Cost Savings" dashboard, allowing teams to 
 | **Deserialization Performance** | 180.0 ns | 240.9 ns (34% overhead) |
 | **Realistic Workload (100 ops)** | 44.1 μs | **30.5 μs (31% faster!)** |
 | **Schema Tolerance** | Limited (add fields only) | Full compatibility via hashing |
-| **Deployment Safety** | ❌ Risk of crashes | ✅ Automatic validation |
+| **Deployment Safety** |  Risk of crashes |  Automatic validation |
 | **Telemetry** | None² | Zero-overhead metrics |
-| **AOT Compatibility** | ✅ | ✅ |
-| **Enterprise Features** | ❌ | ✅ Telemetry, observability |
+| **AOT Compatibility** |  |  |
+| **Enterprise Features** |  |  Telemetry, observability |
 
 **MemoryPack's Schema Limitation:** While MemoryPack supports adding new fields to classes without breaking compatibility, it cannot handle:
 - Removing existing properties
@@ -150,9 +150,9 @@ In CI/CD environments, these operations are common during refactoring. When inco
 | **Serialization Performance** | 1,764.1 ns | 397.2 ns (**4.4× faster**) |
 | **Deserialization Performance** | 4,238.1 ns | 240.9 ns (**17.6× faster**) |
 | **Payload Size** | 100% (baseline) | ~40% (60% reduction) |
-| **Schema Safety** | ✅ (text-based validation) | ✅ (hash validation) |
-| **AOT Compatibility** | ❌ (reflection-based) | ✅ (source-generated) |
-| **Enterprise Features** | ❌ | ✅ Telemetry, observability |
+| **Schema Safety** |  (text-based validation) |  (hash validation) |
+| **AOT Compatibility** |  (reflection-based) |  (source-generated) |
+| **Enterprise Features** |  |  Telemetry, observability |
 
 **System.Text.Json AOT Incompatibility:** While System.Text.Json supports AOT compilation through source generation (`JsonSerializerContext`), the default reflection-based mode triggers IL2026 and IL3050 warnings, making it incompatible with Native AOT deployment scenarios³.
 
@@ -254,13 +254,13 @@ public class User { public int Id; /* removed Name */ }
 | **Serialize Performance** | 397ns | 197ns | ~300ns | ~700ns | 1,764ns |
 | **Deserialize Performance** | 241ns | 180ns | ~220ns | ~500ns | 4,238ns |
 | **Realistic Workload** | **30.5μs** | 44.1μs | ~50μs | ~150μs | ~250μs |
-| **Native AOT** | ✅ Full | ✅ Full | ✅ Source gen | ✅ Supported | ✅ Supported |
-| **Schema Validation** | ✅ Automatic SHA256 | ❌ Crashes | ⚠️ Manual | ⚠️ IDL required | ❌ N/A |
-| **Version Tolerance** | ✅ Detect incompatible | ⚠️ **Limited** | ✅ Full | ⚠️ Manual | ❌ N/A |
-| **Null Handling** | ✅ Proper | ❌ **No distinction** | ✅ Proper | ⚠️ **Known issues** | ✅ Proper |
-| **HybridCache Integration** | ✅ First-class | ❌ Manual | ❌ Manual | ❌ Manual | ✅ Built-in |
-| **Cross-Language** | ❌ .NET only | ❌ C# only | ✅ 50+ languages | ✅ Protocol Buffers | ✅ Universal |
-| **Telemetry/Observability** | ✅ Zero-overhead | ❌ None | ⚠️ Manual | ⚠️ Manual | ✅ Built-in |
+| **Native AOT** |  Full |  Full |  Source gen |  Supported |  Supported |
+| **Schema Validation** |  Automatic SHA256 |  Crashes |  Manual |  IDL required |  N/A |
+| **Version Tolerance** |  Detect incompatible |  **Limited** |  Full |  Manual |  N/A |
+| **Null Handling** |  Proper |  **No distinction** |  Proper |  **Known issues** |  Proper |
+| **HybridCache Integration** |  First-class |  Manual |  Manual |  Manual |  Built-in |
+| **Cross-Language** |  .NET only |  C# only |  50+ languages |  Protocol Buffers |  Universal |
+| **Telemetry/Observability** |  Zero-overhead |  None |  Manual |  Manual |  Built-in |
 | **GitHub Stars** | New | ~4.5k | 6.6k | 4.9k | Built-in |
 
 #### 5.3.5 Use Case Decision Matrix
@@ -283,7 +283,7 @@ public class User { public int Id; /* removed Name */ }
      (crashes)     (automatic)  (manual)     (human-readable)
           │            │           │              │
        197ns         397ns       ~300ns         1,764ns
-       ❌ Unsafe     ✅ Safe     ⚠️ Manual       ✅ Safe but slow
+        Unsafe      Safe      Manual        Safe but slow
 ```
 
 **Rapp's Sweet Spot**: Fills the critical gap between MemoryPack's raw speed (but crashes on schema changes) and MessagePack's safety (but requires manual management).
@@ -300,11 +300,11 @@ public class User { public int Id; /* removed Name */ }
 **Rapp's Unique Value Proposition**:
 
 Rapp is the **ONLY .NET 10 serializer** that combines:
-1. ✅ Near-MemoryPack performance (397ns vs 197ns = 102% overhead)
-2. ✅ Automatic schema safety (prevents MemoryPack deployment crashes)
-3. ✅ HybridCache first-class integration
-4. ✅ Native AOT optimization
-5. ✅ **31% FASTER realistic workloads** than MemoryPack (30.5μs vs 44.1μs)
+1.  Near-MemoryPack performance (397ns vs 197ns = 102% overhead)
+2.  Automatic schema safety (prevents MemoryPack deployment crashes)
+3.  HybridCache first-class integration
+4.  Native AOT optimization
+5.  **31% FASTER realistic workloads** than MemoryPack (30.5μs vs 44.1μs)
 
 **The 102% Overhead is Justified Because**:
 - MemoryPack crashes on schema changes (documented limitation)

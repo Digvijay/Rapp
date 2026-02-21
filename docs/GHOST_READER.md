@@ -1,10 +1,10 @@
-# The Rapp Ghost Reader 👻
+# The Rapp Ghost Reader 
 
 The **Ghost Reader** is a high-performance, Zero-Copy view over your raw data. It allows you to access properties of your objects directly from a binary buffer without deserializing the entire object or allocating a single byte of memory on the heap.
 
 This pattern is ideal for high-throughput scenarios (gaming, trading, IoT) where garbage collection (GC) pauses are unacceptable.
 
-## 🚀 Key Benefits
+##  Key Benefits
 
 | Feature | Traditional (JSON/Protobuf) | Rapp Ghost Reader |
 | :--- | :--- | :--- |
@@ -13,7 +13,7 @@ This pattern is ideal for high-throughput scenarios (gaming, trading, IoT) where
 | **GC Pressure** | High (creates garbage) | **None** (Invisible to GC) |
 | **Speed** | Slow (Reflection + Allocations) | **Instant** (Pointer arithmetic) |
 
-## 📦 How to Use
+##  How to Use
 
 ### 1. Opt-in with `[RappGhost]`
 
@@ -65,7 +65,7 @@ ReadOnlySpan<byte> nameBytes = ghost.Name;
 Console.WriteLine(ghost.NameString); 
 ```
 
-### 🎁 Convenience Methods
+###  Convenience Methods
 
 If you prefer ease of use over raw stack allocation, Rapp generates helper methods for you:
 
@@ -79,7 +79,7 @@ int size = player.ComputeSize();
 byte[] data = player.ToBytes();
 ```
 
-## 🧠 How It Works (The "Head/Tail" Layout)
+##  How It Works (The "Head/Tail" Layout)
 
 Rapp uses a split binary layout to guarantee O(1) random access for fixed fields while supporting variable-length data (strings).
 
@@ -93,7 +93,7 @@ Rapp uses a split binary layout to guarantee O(1) random access for fixed fields
 2.  **Tail Region**: Contains the variable-length data (strings).
     *   The "Pointer" in the Head tells the Ghost Reader exactly where to jump in the generic buffer to find the string.
 
-## ⚠️ Constraints & Best Practices
+##  Constraints & Best Practices
 
 1.  **Max String Size**: The current implementation uses `ushort` for pointers and lengths, limiting individual string lengths and the total buffer size to **64KB**. This is optimized for network packets (UDP/TCP).
 2.  **Buffer Safety**: The Ghost Reader assumes the underlying buffer is valid for the lifetime of the struct. Since it is a `ref struct`, the compiler enforces that it cannot escape the stack frame of the buffer, providing memory safety.

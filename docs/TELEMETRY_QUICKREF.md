@@ -6,7 +6,7 @@
 
 ```bash
 dotnet add package Rapp
-# No telemetry included - maximum performance ✅
+# No telemetry included - maximum performance 
 ```
 
 ## Enabling Telemetry (Development/Monitoring)
@@ -42,7 +42,7 @@ RappMetrics.RecordSerializationSize(bin, json); // Counters: rapp_bytes_total, j
 
 | Configuration | Overhead | Recommendation |
 |--------------|----------|----------------|
-| No `RAPP_TELEMETRY` | **0%** | ✅ Production |
+| No `RAPP_TELEMETRY` | **0%** |  Production |
 | With `RAPP_TELEMETRY` | <0.5% | Development/Staging |
 
 ## Conditional by Environment
@@ -60,11 +60,11 @@ See [docs/TELEMETRY.md](TELEMETRY.md) for full details.
 
 ## Key Points
 
-✅ **NuGet package = Zero overhead** (no telemetry by default)  
-✅ **Opt-in telemetry** via `RAPP_TELEMETRY` compilation symbol  
-✅ **Runtime control** via `RappConfiguration`  
-✅ **No breaking changes** - works with or without telemetry  
-✅ **Fully AOT compatible** in both configurations  
+ **NuGet package = Zero overhead** (no telemetry by default)  
+ **Opt-in telemetry** via `RAPP_TELEMETRY` compilation symbol  
+ **Runtime control** via `RappConfiguration`  
+ **No breaking changes** - works with or without telemetry  
+ **Fully AOT compatible** in both configurations  
 
 ## Examples
 

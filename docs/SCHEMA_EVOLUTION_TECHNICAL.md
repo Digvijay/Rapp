@@ -29,7 +29,7 @@ This demo provides concrete evidence of Rapp's schema evolution safety advantage
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Web Endpoints │    │ Schema Evolution │    │  Serialization  │
 │                 │    │     Engine       │    │   Engines       │
-│ • /demo/memory  │───▶│ • Version diffs  │───▶│ • MemoryPack    │
+│ • /demo/memory  │───│ • Version diffs  │───│ • MemoryPack    │
 │   pack-crash    │    │ • Compatibility  │    │ • Rapp          │
 │ • /demo/rapp-   │    │   checking       │    │ • System.Text.  │
 │   safety        │    │ • Hash validation│    │   Json          │
@@ -44,10 +44,10 @@ The demo tests critical CI/CD scenarios that commonly occur in production:
 
 | Scenario | MemoryPack Result | Rapp Result | Business Impact |
 |----------|------------------|-------------|-----------------|
-| **Property Added** | ✅ Compatible | ✅ Compatible | Low risk |
-| **Property Removed** | ❌ `SerializationException` | ✅ Cache miss → Fresh data | **High risk → Safe** |
-| **Properties Reordered** | ❌ `SerializationException` | ✅ Cache miss → Fresh data | **High risk → Safe** |
-| **Type Changed** (int→double) | ❌ `SerializationException` | ✅ Cache miss → Fresh data | **High risk → Safe** |
+| **Property Added** |  Compatible |  Compatible | Low risk |
+| **Property Removed** |  `SerializationException` |  Cache miss → Fresh data | **High risk → Safe** |
+| **Properties Reordered** |  `SerializationException` |  Cache miss → Fresh data | **High risk → Safe** |
+| **Type Changed** (int→double) |  `SerializationException` |  Cache miss → Fresh data | **High risk → Safe** |
 
 ### Code Quality Standards
 
@@ -94,7 +94,7 @@ The demo was updated to use **AOT-compatible JSON serialization** with `JsonSeri
 var jsonString = JsonSerializer.Serialize(data, DemoJsonContext.Default.WeatherForecastV1);
 
 // Reflection approach (would break AOT)
-var jsonString = JsonSerializer.Serialize(data); // ❌ IL2026/IL3050 warnings
+var jsonString = JsonSerializer.Serialize(data); //  IL2026/IL3050 warnings
 ```
 
 This demonstrates that while System.Text.Json *can* be AOT-compatible, it requires significant developer effort and explicit configuration, unlike Rapp's automatic approach.
@@ -129,23 +129,23 @@ DirectMemory             93.9 ns (single), 13.0 μs (100 ops, 80% hit)
 ```
 v1.0 App: Caches User { Id, Name, Email }
 v2.0 App: Adds Phone field, removes Email field
-MemoryPack: 💥 CRASH - SerializationException
-Rapp: ✅ SAFE - Detects hash mismatch, cache miss, fetches fresh data
+MemoryPack:  CRASH - SerializationException
+Rapp:  SAFE - Detects hash mismatch, cache miss, fetches fresh data
 ```
 
 ### Scenario 2: Database Schema Migration
 ```
 Legacy Data: Product { Price: int }
 New Schema: Product { Price: decimal }
-MemoryPack: 💥 CRASH - Type mismatch during deserialization
-Rapp: ✅ SAFE - Hash validation prevents incompatible data usage
+MemoryPack:  CRASH - Type mismatch during deserialization
+Rapp:  SAFE - Hash validation prevents incompatible data usage
 ```
 
 ### Scenario 3: Feature Flag Rollout
 ```
 Feature Flag: Enable new Address field
-MemoryPack: 💥 CRASH - Schema inconsistency during rollout
-Rapp: ✅ SAFE - Gradual rollout with automatic compatibility detection
+MemoryPack:  CRASH - Schema inconsistency during rollout
+Rapp:  SAFE - Gradual rollout with automatic compatibility detection
 ```
 
 ## Scripts and Automation
@@ -198,8 +198,8 @@ Rapp: ✅ SAFE - Gradual rollout with automatic compatibility detection
 - [x] **Framework Versions:** .NET 10.0.1, MemoryPack 1.21.3
 - [x] **OS Coverage:** Windows 11, macOS Sequoia, Ubuntu 22.04
 - [x] **Architecture:** x64 validation completed
-- [x] **AOT Compatibility:** ✅ All endpoints use source-generated JSON serialization
-- [x] **IL2026/IL3050 Warnings:** ✅ Suppressed for demo, AOT compatibility demonstrated
+- [x] **AOT Compatibility:**  All endpoints use source-generated JSON serialization
+- [x] **IL2026/IL3050 Warnings:**  Suppressed for demo, AOT compatibility demonstrated
 
 ## Conclusion
 

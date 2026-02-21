@@ -319,8 +319,8 @@ builder.Services.AddHybridCache()
 | vs JSON | 1.0× | 9.0× faster (ser) | 4.4× faster (ser) | Rapp: 17.6× faster (deser) |
 | HybridCache | N/A | 416.5 ns | 436.9 ns | Rapp overhead: ~4.9% |
 | Realistic (100 ops) | N/A | 44.1 μs | 30.5 μs | **Rapp 31% faster!** |
-| Schema Safety | ✅ | ❌ | ✅ | Rapp matches JSON |
-| AOT Compatible | ❌ | ✅ | ✅ | Rapp matches MemoryPack |
+| Schema Safety |  |  |  | Rapp matches JSON |
+| AOT Compatible |  |  |  | Rapp matches MemoryPack |
 
 *Benchmarks: .NET 10.0.1, Intel Core i7-4980HQ @ 2.80GHz, macOS. See [`benchmarks/`](../benchmarks/) for details.*
 
