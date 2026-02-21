@@ -3,8 +3,18 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main", "development" ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - '.github/workflows/deploy-docs.yml'
   pull_request:
     branches: [ "main", "development" ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - '.github/workflows/deploy-docs.yml'
   schedule:
     - cron: '34 1 * * 0'
 
