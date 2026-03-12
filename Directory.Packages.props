@@ -17,7 +17,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     
     <!-- Build & Tools -->
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.200" />
     
     <!-- gRPC & Web -->
     <PackageVersion Include="Grpc.AspNetCore" Version="2.70.0" />
