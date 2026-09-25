@@ -68,10 +68,10 @@ public class RappGenerator : IIncrementalGenerator
             {
                 var attrName = attr.AttributeClass?.Name;
                 var attrDisplay = attr.AttributeClass?.ToDisplayString();
-                if (attr.AttributeClass?.Name == "RappCacheAttribute" || 
-                    attr.AttributeClass?.Name == "RappCache" ||
-                    attr.AttributeClass?.ToDisplayString() == "Rapp.RappCacheAttribute" ||
-                    attr.AttributeClass?.ToDisplayString() == "Rapp.RappCache")
+                if (attrName == "RappCacheAttribute" ||
+                    attrName == "RappCache" ||
+                    attrDisplay == "Rapp.RappCacheAttribute" ||
+                    attrDisplay == "Rapp.RappCache")
                 {
                     return symbol;
                 }

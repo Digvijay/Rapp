@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-25
+
+### Changed
+- Multi-targets `net8.0` (LTS) and `net10.0` (current) instead of a single framework, so the
+  package no longer forces consumers onto the newest runtime. `net11.0` is validated in CI behind
+  an opt-in switch.
+
+### Fixed
+- **The solution could not be restored from a clean clone.** `Rapp.Playground` referenced
+  `Microsoft.AspNetCore.OpenApi` 10.0.3, which pulls `Microsoft.OpenApi` 2.0.0 transitively —
+  a high-severity advisory (GHSA-v5pm-xwqc-g5wc) that failed `dotnet restore Rapp.sln` with
+  NU1903. The shipped `Rapp` package itself was never affected, but nobody could build the
+  repository and CI would have failed on its first run. Pinned to 2.12.2 via
+  `Directory.Packages.props` transitive pinning.
+- **`Rapp.Benchmark` and `Rapp.Dashboard` were produced as NuGet packages** by `dotnet pack` on
+  the solution. Only `Rapp` and its generator are packable now.
+- Removed a redundant `Microsoft.SourceLink.GitHub` package reference. Source Link has been built
+  into the .NET SDK since .NET 8; the explicit reference added nothing and pulled in
+  `Microsoft.Build.Tasks.Git`, which carries GHSA-23fw-v26w-5fgq.
+
 ## [1.2.0] - 2026-01-11
 
 ### Added
