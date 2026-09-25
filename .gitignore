@@ -55,3 +55,8 @@ docs/IMAGE_PROMPTS.md
 node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
+
+*.snupkg
+*.backup
+analysis.json
+*.binlog
