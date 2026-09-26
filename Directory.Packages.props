@@ -6,11 +6,11 @@
   <ItemGroup>
     <!-- Core Dependencies -->
     <PackageVersion Include="MemoryPack" Version="1.21.4" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <!--
       Transitive pin. Microsoft.AspNetCore.OpenApi has recently pulled Microsoft.OpenApi builds with
       a known high-severity advisory (GHSA-v5pm-xwqc-g5wc). CentralPackageTransitivePinningEnabled is
@@ -18,22 +18,22 @@
       Remove once restore proves Microsoft.AspNetCore.OpenApi ships with a patched Microsoft.OpenApi by default.
     -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />    <!-- Source Generators -->
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0-2.25625.1" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0-1.26328.17" />
 
     <!-- Build & Tools -->
 
     <!-- gRPC & Web -->
-    <PackageVersion Include="Grpc.AspNetCore" Version="2.70.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="9.0.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.84.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="10.0.12" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 
     <!-- Testing & Benchmarking -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="coverlet.collector" Version="8.0.1" />
-    <PackageVersion Include="FluentAssertions" Version="8.9.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="FluentAssertions" Version="8.11.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
   </ItemGroup>
 </Project>

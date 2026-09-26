@@ -27,14 +27,14 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Required: Nerdbank.GitVersioning walks history to compute version height and
           # hard-fails on a shallow clone.
           fetch-depth: 0
 
       - name: Setup .NET (8.0 LTS and 10.0)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -75,12 +75,12 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup .NET (8.0, 10.0 and 11.0 preview)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
