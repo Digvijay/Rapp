@@ -37,8 +37,14 @@ app.Run();
 namespace Rapp.Samples.GrpcService
 {
     // gRPC service implementation
-    public class RappDataService : DataService.DataServiceBase
+    public partial class RappDataService : DataService.DataServiceBase
     {
+        [LoggerMessage(Level = LogLevel.Information, Message = "GetData called with ID: {id}")]
+        private partial void LogGetData(int id);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "ListData called - Page: {page}, Size: {size}")]
+        private partial void LogListData(int page, int size);
+
         private readonly HybridCache _cache;
         private readonly ILogger<RappDataService> _logger;
 
@@ -50,7 +56,7 @@ namespace Rapp.Samples.GrpcService
 
         public override async Task<DataReply> GetData(DataRequest request, Grpc.Core.ServerCallContext context)
         {
-            _logger.LogInformation("GetData called with ID: {Id}", request.Id);
+            LogGetData(request.Id);
 
             // Use Rapp-backed cache for high-performance caching
             var cachedData = await _cache.GetOrCreateAsync(
@@ -69,8 +75,7 @@ namespace Rapp.Samples.GrpcService
 
         public override async Task<ListDataReply> ListData(ListDataRequest request, Grpc.Core.ServerCallContext context)
         {
-            _logger.LogInformation("ListData called - Page: {Page}, Size: {Size}", 
-                request.PageNumber, request.PageSize);
+            LogListData(request.PageNumber, request.PageSize);
 
             var cacheKey = $"datalist-{request.PageNumber}-{request.PageSize}";
             var cachedList = await _cache.GetOrCreateAsync(

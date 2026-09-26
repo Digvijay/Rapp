@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <TargetFrameworks>$(ToolkitAppTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
@@ -9,8 +10,6 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <EnableRequestDelegateGenerator>false</EnableRequestDelegateGenerator>
     <NoWarn>$(NoWarn);EXTEXP0018;IL2026;IL3050</NoWarn>
-    <!-- Enable Rapp telemetry for demo purposes -->
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

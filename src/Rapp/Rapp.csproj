@@ -1,18 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!--
+      Directory.Build.props pins TargetFramework for the whole repo. The shipping library needs to
+      multi-target instead, so TargetFramework is cleared here; MSBuild prefers TargetFramework
+      over TargetFrameworks whenever it is non-empty.
+    -->
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>$(ToolkitLibraryTargetFrameworks)</TargetFrameworks>
     <PackageId>Rapp</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Description>Schema-aware binary serialization for safe, high-performance .NET caching</Description>
     <PackageTags>caching;serialization;binary;performance;aot;schema-evolution</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>v1.2.0 - Introduces Ghost Reader for zero-copy views. Includes automatic schema validation and zero-overhead telemetry options.</PackageReleaseNotes>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
+    <!-- CopyProjectReferencesToPackage depends on ResolveReferences, which would rebuild references under pack no-build (NETSDK1085). -->
+    <BuildProjectReferences Condition="'$(NoBuild)' == 'true'">false</BuildProjectReferences>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
     <!-- Metrics are excluded from NuGet package for zero overhead -->
-    <!-- Define RAPP_TELEMETRY in your project to enable metrics -->
+    <!-- RAPP_TELEMETRY must not be defined for this project when packing; see docs/known-issues.md entry 9 -->
     <!-- Package Validation -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <GenerateCompatibilitySuppressionFile>true</GenerateCompatibilitySuppressionFile>
@@ -27,7 +35,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
     <PackageReference Include="MemoryPack" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <!-- SourceLink is built into the .NET SDK (8.0+); the standalone Microsoft.SourceLink.GitHub package is redundant and dragged in a vulnerable Microsoft.Build.Tasks.Git. -->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rapp.Gen\Rapp.Gen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

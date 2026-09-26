@@ -4,15 +4,22 @@ Rapp provides optional telemetry for monitoring cache performance. **Telemetry i
 
 ## Performance-First Design
 
-The NuGet package you install has **zero telemetry overhead**:
-- No metric collection
-- No counters
-- No instrumentation code paths
-- Pure serialization performance
+The NuGet package you install contains no size-comparison instrumentation. It records cache hits
+and misses through `System.Diagnostics.Metrics` counters, which cost an interlocked add when a
+listener is attached and nearly nothing when none is; set `RappConfiguration.EnableTelemetry = false`
+to skip even that. Serialization into a caller-supplied buffer allocates nothing, and a test in
+`PerformanceRegressionTests` enforces it.
+
+> **Before 1.3.0 this was not true.** From 1.1.0 to 1.2.0 the repository defined `RAPP_TELEMETRY`
+> for every project, including the shipped library, so every `Serialize` serialized the value a
+> second time and also serialized it to JSON by reflection, and every cache hit serialized the
+> result to JSON. See `docs/known-issues.md`, entry 9.
 
 ## Enabling Telemetry (Optional)
 
-To enable telemetry in your application, add the `RAPP_TELEMETRY` compilation symbol:
+`RAPP_TELEMETRY` is a compilation symbol **of the Rapp library itself**. It takes effect only when
+Rapp is compiled with it — that is, when you build Rapp from source. Defining it in a project that
+consumes the NuGet package has no effect on the package's code. To build Rapp with it:
 
 ### Option 1: Project File
 

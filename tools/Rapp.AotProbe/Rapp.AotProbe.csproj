@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The AOT probe. This exists so the Native AOT claim is gated on Rapp's own surface rather than
+    on whatever a sample happens to reference.
+
+    The samples publish fine, but they pull MemoryPack's reflective formatter provider and
+    HybridCache's default JSON serializer into the ILC whole-program analysis, and neither of those
+    is annotated for trimming. Gating on a sample therefore measures the annotation state of two
+    third-party assemblies, not whether Rapp is AOT-safe.
+
+    This project consumes only what the package exposes, is published with PublishAot=true, and is
+    executed by CI. It asserts round-trip correctness at runtime, which is the part that actually
+    proves the reflective fallback is never reached: an unreached warning is a warning, a reached
+    one is a crash.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Single-target on purpose: this is published, and publish needs one framework. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Rapp.AotProbe</RootNamespace>
+
+    <!--
+      Deliberately no IL-code suppressions here.
+
+      The obvious way to get a green AOT gate is to NoWarn the codes the dependencies produce, but
+      warning codes are not owned by an assembly: NoWarn IL3050 to silence MemoryPack and you have
+      also silenced it for Rapp, which is the one place it would have mattered. The gate would then
+      pass by construction.
+
+      Instead the workflow asserts on the *origin* of each warning — see aot-validation.yml. ILC
+      warnings are left non-fatal there so that compilation completes and the probe can actually be
+      run, and the build fails if any warning names a Rapp type. That check cannot be weakened by
+      adding a code to a list.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="MemoryPack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rapp\Rapp.csproj" />
+    <ProjectReference Include="..\..\src\Rapp.Gen\Rapp.Gen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>
