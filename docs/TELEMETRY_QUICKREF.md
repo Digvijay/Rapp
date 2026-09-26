@@ -9,9 +9,11 @@ dotnet add package Rapp
 # No telemetry included - maximum performance 
 ```
 
-## Enabling Telemetry (Development/Monitoring)
+## Enabling Size-Comparison Telemetry (Development/Monitoring)
 
-Add to your `.csproj`:
+Hit and miss counters are always emitted. JSON size comparison requires building **Rapp itself**
+from source with the symbol below; adding it to a project that consumes the NuGet package does
+nothing. See [TELEMETRY.md](TELEMETRY.md).
 
 ```xml
 <PropertyGroup>
@@ -22,7 +24,7 @@ Add to your `.csproj`:
 ## Configuration
 
 ```csharp
-// Control at runtime (when RAPP_TELEMETRY is defined)
+// Control at runtime
 RappConfiguration.EnableTelemetry = false;  // Disable metrics
 RappConfiguration.EnableDetailedErrors = false;  // Simple errors (production)
 RappConfiguration.ThrowOnSchemaMismatch = false;  // Graceful degradation

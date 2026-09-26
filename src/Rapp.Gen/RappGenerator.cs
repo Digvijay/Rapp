@@ -29,70 +29,51 @@ using Microsoft.CodeAnalysis.Text;
 namespace Rapp.Gen
 {
 /// <summary>
+/// The value model carried through the pipeline: strings only, so runs compare equal.
+/// </summary>
+internal readonly record struct CacheTypeModel(string ClassName, string FullType, string SchemaHash);
+
+/// <summary>
 /// Minimal test generator to verify analyzer loading.
 /// </summary>
-[Generator]
-public class TestGenerator : IIncrementalGenerator
-{
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource("TestGenerated.g.cs", "// Test generated code"));
-    }
-}
-
 [Generator]
 public class RappGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Simple test: Always add a source file to verify generator is running
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource("TestGenerator.g.cs", "// Test: Generator is working!"));
-
         var provider = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: (s, _) => s is ClassDeclarationSyntax,
-                transform: (ctx, _) => GetClassToGenerate(ctx))
-            .Where(m => m is not null);
+            .ForAttributeWithMetadataName(
+                "Rapp.RappCacheAttribute",
+                predicate: static (s, _) => s is ClassDeclarationSyntax,
+                transform: static (ctx, _) => GetClassToGenerate(ctx));
 
-        context.RegisterSourceOutput(provider, Execute);
+        context.RegisterSourceOutput(provider, static (spc, model) => Execute(spc, model));
     }
 
-    private static INamedTypeSymbol? GetClassToGenerate(GeneratorSyntaxContext context)
+    /// <summary>
+    /// Projects the symbol onto an equatable value model.
+    /// </summary>
+    /// <remarks>
+    /// Nothing downstream of this method may touch a Roslyn symbol. Symbols hold onto the
+    /// compilation they came from, and a fresh one is created on every keystroke, so a pipeline
+    /// carrying symbols never finds a cache hit and re-runs in full while the user types.
+    /// </remarks>
+    private static CacheTypeModel GetClassToGenerate(GeneratorAttributeSyntaxContext context)
     {
-        var declaration = (ClassDeclarationSyntax)context.Node;
-        var symbol = context.SemanticModel.GetDeclaredSymbol(declaration) as INamedTypeSymbol;
-        if (symbol is not null)
-        {
-            var attributes = symbol.GetAttributes();
-            foreach (var attr in attributes)
-            {
-                var attrName = attr.AttributeClass?.Name;
-                var attrDisplay = attr.AttributeClass?.ToDisplayString();
-                if (attrName == "RappCacheAttribute" ||
-                    attrName == "RappCache" ||
-                    attrDisplay == "Rapp.RappCacheAttribute" ||
-                    attrDisplay == "Rapp.RappCache")
-                {
-                    return symbol;
-                }
-            }
-        }
-        return null;
+        var symbol = (INamedTypeSymbol)context.TargetSymbol;
+
+        return new CacheTypeModel(
+            ClassName: symbol.Name,
+            FullType: symbol.ToDisplayString(),
+            SchemaHash: ComputeSchemaHash(symbol));
     }
 
-    private static void Execute(SourceProductionContext context, INamedTypeSymbol? symbol)
+    private static void Execute(SourceProductionContext context, CacheTypeModel model)
     {
-        if (symbol is null)
-        {
-            var testCode = "// No symbol provided";
-            context.AddSource("RappGenerator.NoSymbol.g.cs", SourceText.From(testCode, Encoding.UTF8));
-            return;
-        }
-
-        var className = symbol.Name;
-        var fullType = symbol.ToDisplayString();
+        var className = model.ClassName;
+        var fullType = model.FullType;
         var serializerName = $"{className}RappSerializer";
-        var hash = ComputeSchemaHash(symbol);
+        var hash = model.SchemaHash;
         var hashBytes = GetHashBytes(hash);
 
         var code = $@"

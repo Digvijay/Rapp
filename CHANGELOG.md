@@ -24,6 +24,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed a redundant `Microsoft.SourceLink.GitHub` package reference. Source Link has been built
   into the .NET SDK since .NET 8; the explicit reference added nothing and pulled in
   `Microsoft.Build.Tasks.Git`, which carries GHSA-23fw-v26w-5fgq.
+- **Two test generators shipped in the analyzer** and added `TestGenerated.g.cs` and
+  `TestGenerator.g.cs` to every consuming compilation. Removed.
+- `dotnet pack --no-build` failed with `NETSDK1085`; `GeneratePackageOnBuild` is removed.
+- **Every cache write serialized the value twice more, once to JSON by reflection, and every cache
+  hit serialized the result to JSON.** `RAPP_TELEMETRY` was defined repository-wide, so the shipped
+  library always contained its size-comparison block, despite documentation saying the package had
+  zero telemetry overhead. `Serialize` now allocates 0 bytes per call (was 568). Affects 1.1.0 and
+  1.2.0. Defining `RAPP_TELEMETRY` in a consuming project never had any effect; the docs now say so.
+- Timing assertions in `PerformanceRegressionTests` replaced with allocation assertions.
+- **Both incremental generators re-ran on every keystroke.** `RappGenerator` carried an
+  `INamedTypeSymbol` and `RappGhostGenerator` a `ClassDeclarationSyntax` through the pipeline;
+  neither is equatable across compilations, so nothing was ever cached and every cached step kept
+  the previous compilation alive. Both now use `ForAttributeWithMetadataName` and project into
+  equatable value models. Generated output is unchanged.
+- **`CA1873` in the gRPC sample**: log arguments were evaluated before the level was checked.
+  Replaced with source-generated `[LoggerMessage]` partial methods.
+
+### Added
+- `Rapp.Dashboard.RappSizeComparison` — the opt-in replacement for the size comparison removed
+  from the library, with a `JsonTypeInfo` overload so it stays Native-AOT-safe. The samples call
+  it from their own cache-miss paths, where the cost is visible and chosen.
+- `GeneratorIncrementalityTests` asserts both generators report only `Cached`/`Unchanged` steps
+  across identical compilations, with a deliberately defective generator as a control so the
+  harness is proven able to fail.
+- `TelemetryOverheadTests` listens to the `Rapp` meter and asserts the library emits no size
+  measurement. It fails with 400 measurements when built with `-p:DefineConstants=RAPP_TELEMETRY`.
+
+### Removed
+- The no-op `RAPP_TELEMETRY` define from six project files (three samples, tests, playground and
+  dashboard). A `#if` applies where the code is compiled, and every `#if RAPP_TELEMETRY` block is
+  in `Rapp`'s own sources, so these defines changed nothing — while implying the cost was opt-in.
+
+### Build
+- The three sample projects are now in `Rapp.sln`. They were only in `Samples/Rapp.Samples.sln`,
+  which no pipeline built, so the repository's only usage examples were never compiled by CI.
 
 ## [1.2.0] - 2026-01-11
 

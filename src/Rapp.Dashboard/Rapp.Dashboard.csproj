@@ -6,8 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAotCompatible>true</IsAotCompatible>
-    <!-- Enable Rapp telemetry for dashboard functionality -->
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
   </PropertyGroup>
 

@@ -13,6 +13,14 @@ version can see what applied to it.
 | 3 | Tests ran only on `net10.0` while the package shipped `net8.0` | High | **Fixed** |
 | 4 | Benchmark and dashboard were published as NuGet packages | Moderate | **Fixed** |
 | 5 | Two unused locals in the generator | Low | **Fixed** |
+| 6 | `dotnet pack --no-build` failed on the solution | Moderate | **Fixed** |
+| 7 | Test generators shipped to every consumer | Moderate | **Fixed** |
+| 8 | Generator pipeline defeats incremental caching | Low | **Fixed** |
+| 9 | Shipped library serialized every value twice, once to JSON by reflection | High | **Fixed** |
+| 10 | Wall-clock assertions made the test suite fail under load | Moderate | **Fixed** |
+| 11 | Samples' JSON size comparison no longer populated | Low | **Fixed** |
+| 12 | The three sample projects were in no solution the build ever compiled | Moderate | **Fixed** |
+| 13 | Six project files defined `RAPP_TELEMETRY`, where it does nothing | Low | **Fixed** |
 
 ---
 
@@ -107,20 +115,183 @@ do.
 
 ---
 
-# Open
+## 6. `dotnet pack --no-build` failed on the solution
 
-Nothing is open in Rapp.
+**Severity: moderate. Fixed in 1.3.0.**
+
+`src/Rapp/Rapp.csproj` packs its project references into its own package through a
+`CopyProjectReferencesToPackage` target that depends on `ResolveReferences`. Under
+`dotnet pack --no-build` that dependency still invoked `Build` on the referenced projects, which the
+SDK forbids (`NETSDK1085`), so packing the solution after building it failed. It is exactly what
+the CI "Pack" step does, so CI could not have produced a package. The project also set
+`GeneratePackageOnBuild`, which packed on every build and hid the problem locally.
+
+**Fix:** `BuildProjectReferences` is `false` when `NoBuild` is set, and `GeneratePackageOnBuild`
+is removed (the publish workflow packs explicitly). `dotnet pack --no-build` now produces
+exactly `Rapp.1.3.0.nupkg`. The package contents were inspected: the library for `net8.0` and `net10.0` plus the
+generator under `analyzers/dotnet/cs`.
+
+---
+
+## 7. Test generators shipped to every consumer
+
+**Severity: moderate. Fixed in 1.3.0.**
+
+`Rapp.Gen` contained a second `[Generator]` class, `TestGenerator`, which added
+`TestGenerated.g.cs` to every compilation that referenced the package. `RappGenerator` itself also
+added a `TestGenerator.g.cs`. Neither had any function; both were packed into the shipped analyzer
+and appeared in every consumer's compilation. It is the same defect Sannr shipped (its entries 6
+and 11).
+
+**Fix:** both are deleted. `GeneratorHygieneTests` asserts that `Rapp.Gen` registers exactly
+`RappGenerator` and `RappGhostGenerator`, and that a compilation with no `[RappCache]` type gets no
+generated source at all. Both tests failed before the fix.
+
+---
+
+## 9. The shipped library serialized every value twice, once to JSON by reflection
+
+**Severity: high. Fixed in 1.3.0. Affects 1.1.0 and 1.2.0.**
+
+`RappBaseSerializer` contains a size-comparison block under `#if RAPP_TELEMETRY` that, on every
+`Serialize`, serializes the value a second time with MemoryPack and a third time to JSON with
+`System.Text.Json` reflection; and on every `Deserialize`, serializes the result to JSON. The
+documentation described this as opt-in: "the NuGet package you install has zero telemetry
+overhead", enabled by defining the symbol "in your project".
+
+Neither half was true. `Directory.Build.props` defined `RAPP_TELEMETRY` for every project in the
+repository, including `Rapp` itself, from 1.1.0 onwards, so the shipped package always contained the
+block. And because the symbol is evaluated when Rapp is compiled, defining it in a consuming project
+could never have switched it on or off. A 1.3.0 package built before this fix contained references to
+`JsonSerializer.SerializeToUtf8Bytes`.
+
+The consequences, for a library whose purpose is fast binary caching:
+
+* **Allocation.** `Serialize` into a reused buffer allocated 568 bytes per call; it now allocates 0.
+  `Deserialize` allocated 736 bytes where the result graph is 272.
+* **Latency and CPU.** Every cache write and every cache hit paid for a reflection-based JSON
+  serialization that the caller never asked for and whose output was discarded.
+* **Native AOT.** The JSON calls suppressed `IL2026` and `IL3050` inside a package marked
+  `IsAotCompatible`. Under AOT, reflection serialization fails; the failure was swallowed by an empty
+  `catch`, which is why nobody saw it — but the work up to the failure still ran.
+* **The benchmarks.** `Rapp.Benchmark` inherited the same define, so published figures measured
+  Rapp with this overhead included.
+
+**Fix:** the repository-wide define is removed, so the library is compiled without the block. The
+projects that want it (tests, dashboard, playground, samples) still define it for their own code.
+`IRappMetricsCollector` and `RappMetricsCollector`, which had been public only under the symbol, are
+now unconditional so that 1.3.0 does not remove types 1.2.0 shipped.
+
+`PerformanceRegressionTests` now asserts allocation per operation: 0 bytes to serialize, and exactly
+the result graph to deserialize. Built with the old define, all three tests fail with the numbers
+above; without it, they pass on `net8.0`, `net10.0` and `net11.0`.
+
+---
+
+## 10. Wall-clock assertions made the test suite fail under load
+
+**Severity: moderate. Fixed in 1.3.0. Affected the build only.**
+
+Five tests asserted elapsed time: 1,000 serializations in under 50 ms, 100 parallel round-trips in
+under 500 ms, and so on. Such thresholds measure the machine, not the code. The parallel test failed
+at 515 ms when three target frameworks were tested at once on one machine, and hosted CI runners are
+slower and noisier still. They also did not catch entry 9: the serialization and deserialization thresholds passed with the
+reflection JSON overhead present.
+
+**Fix:** allocation per operation replaces elapsed time where the test is about cost (entry 9);
+the two tests about correctness under concurrency and through `HybridCache` keep their correctness
+assertions and are renamed to say so. Timing belongs in `Rapp.Benchmark`.
+
+---
+
+## 8. The generator pipeline defeated incremental caching
+
+**Severity: low. Fixed. Affected IDE responsiveness only; build output was always correct.**
+
+`RappGenerator`'s syntax transform returned an `INamedTypeSymbol`, and `RappGhostGenerator`'s
+returned a `ClassDeclarationSyntax`. Neither is equatable across compilations, so the incremental
+pipeline treated every edit as a change: it re-ran code generation for every `[RappCache]` and
+`[RappGhost]` type on every keystroke, and each cached step kept the previous compilation alive.
+Roslyn's incremental-generator guidance is explicit that pipeline values must be equatable models,
+not symbols or syntax nodes.
+
+Both generators now use `ForAttributeWithMetadataName` and project into equatable value models
+(`CacheTypeModel`, `GhostModel`) built from strings and an `EquatableArray<T>` wrapper —
+`ImmutableArray<T>` compares by the identity of the underlying array, so it is not sufficient on
+its own. A `netstandard2.0` generator also needs an `IsExternalInit` polyfill before it can declare
+records at all.
+
+`GeneratorIncrementalityTests` pins this by running each generator against two separately
+constructed but identical compilations and asserting that every tracked output step reports
+`Cached` or `Unchanged`. The suite includes a deliberately defective symbol-carrying generator as a
+control, so the harness is known to be capable of failing rather than merely observed to pass.
+
+## 11. The samples' JSON size comparison was no longer populated
+
+**Severity: low. Fixed. Affected the samples only.**
+
+The ASP.NET Core and gRPC samples displayed Rapp bytes against JSON-equivalent bytes. Those numbers
+came from the block removed in entry 9, so the JSON figure read zero.
+
+The measurement is now `Rapp.Dashboard`'s `RappSizeComparison`: opt-in, called from the sample's
+own cache-miss path where the cost is visible and chosen, and annotated
+`[RequiresUnreferencedCode]` / `[RequiresDynamicCode]` because the JSON half of the comparison is
+reflection-based, with a `JsonTypeInfo` overload for callers who need it to stay Native-AOT-safe.
+It was deliberately not restored to the library.
+
+`TelemetryOverheadTests` guards the boundary by listening to the `Rapp` meter across a hundred
+round trips and asserting that the library emits no `rapp_bytes_total` or `json_bytes_equivalent`
+measurement. Building the same test with `-p:DefineConstants=RAPP_TELEMETRY` fails it with 400
+recorded measurements, which is the regression it exists to catch. The listener filters by the
+calling thread, because a `MeterListener` is process-global and `RappMetricsTests` exercises the
+public `RecordSerializationSize` API on a parallel xUnit thread — without that filter the test was
+intermittently red for a reason that had nothing to do with the library.
+
+## 12. The three sample projects were in no solution the build ever compiled
+
+**Severity: moderate. Fixed.**
+
+`Samples/AspNetCoreMinimalApi`, `Samples/GrpcService` and `Samples/ConsoleApp` were referenced only
+by `Samples/Rapp.Samples.sln`. CI built `Rapp.sln`, so no pipeline had ever compiled them. They
+were the repository's only demonstration of how the library is meant to be used, and they were
+outside the audit.
+
+Building them surfaced two `CA1873` warnings in `GrpcService/Program.cs` immediately — a logging
+call whose arguments were evaluated before the log level was checked. That is a small defect; the
+point is that nothing would have reported it. The samples are now projects in `Rapp.sln`, so
+`TreatWarningsAsErrors` applies to them, and `CA1873` is fixed with source-generated
+`[LoggerMessage]` partial methods.
+
+This is the third instance in this review of the same theme: a project outside the build graph is
+outside the audit.
+
+## 13. Six project files defined `RAPP_TELEMETRY`, where it does nothing
+
+**Severity: low. Fixed.**
+
+The three samples, the test project, the playground and the dashboard each set
+`<DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>`. A `#if` is evaluated when
+the file containing it is compiled, and every `#if RAPP_TELEMETRY` block lives in `Rapp`'s own
+sources. Defining the symbol downstream compiled nothing differently in any of the six projects.
+
+That misunderstanding is what entry 9 was: the symbol appeared to be opt-in while the cost it
+guarded was actually being paid unconditionally by everyone. The defines are removed. `Rapp.csproj`
+carries a comment recording that the symbol must not be defined there when packing.
+
+---
 
 Two caveats belong here rather than in the table, because neither is a defect and both bound what
 the entries above are worth:
 
 * Every result recorded here was produced on a single Windows ARM64 machine. CI has never executed
   on a GitHub-hosted runner, so nothing above is confirmed on x64 or on Linux.
-* The `net11.0` preview leg is opt-in via `IncludePreviewTargetFramework` and has not been
-  exercised recently, because the preview SDK is not installed on the machine used for this work.
+* The `net11.0` leg is opt-in via `IncludePreviewTargetFramework`. It has been exercised on the
+  same machine with SDK `11.0.100-rc.1.26425.128` (restore, build and every test, `net8.0`,
+  `net10.0` and `net11.0`), with no failures. A release candidate is not a release; the leg
+  should be re-run against the GA SDK.
 
-A record of five fixed defects measures how hard this repository was looked at. It is not a claim
-that there is nothing left to find.
+A record of thirteen defects, all fixed, measures how hard this repository was looked at. It is not
+a claim that there is nothing left to find.
 
 ---
 

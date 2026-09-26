@@ -223,7 +223,7 @@ Rapp includes built-in telemetry for cache performance tracking:
 // - rapp_cache_misses_total: Total number of cache misses
 ```
 
-> **Note:** Telemetry is conditionally compiled with `RAPP_TELEMETRY` define for production use.
+> **Note:** Hit and miss counters are always available. JSON size comparison is compiled only when Rapp itself is built from source with `RAPP_TELEMETRY`; defining the symbol in a consuming project has no effect. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
 ### 3. AOT Compatibility
 

@@ -21,7 +21,6 @@
 
     <!-- Global Feature Flags -->
     <IsAotCompatible>true</IsAotCompatible>
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
 
     <!-- Centralized Package Metadata -->
     <Authors>Digvijay Chauhan</Authors>

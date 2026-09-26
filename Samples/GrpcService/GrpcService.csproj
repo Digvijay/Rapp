@@ -4,8 +4,6 @@
     <NoWarn>$(NoWarn);CA1848</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Enable Rapp telemetry for demo purposes -->
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
     <IsAotCompatible>false</IsAotCompatible>
   </PropertyGroup>
 

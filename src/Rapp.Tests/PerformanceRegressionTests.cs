@@ -56,18 +56,17 @@ public class PerformanceRegressionTests
         };
 
         var buffer = new ArrayBufferWriter<byte>();
+        serializer.Serialize(data, buffer);
 
         // Act
-        var stopwatch = Stopwatch.StartNew();
-        for (int i = 0; i < 1000; i++)
+        var perOperation = AllocatedBytesPerOperation(1000, () =>
         {
             buffer.Clear();
             serializer.Serialize(data, buffer);
-        }
-        stopwatch.Stop();
+        });
 
-        // Assert - Should be reasonably fast (less than 50ms for 1000 operations)
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(50);
+        // Assert
+        perOperation.Should().BeLessThanOrEqualTo(SerializeBudgetBytes);
     }
 
     [Fact]
@@ -91,21 +90,17 @@ public class PerformanceRegressionTests
         serializer.Serialize(data, buffer);
         var sequence = new System.Buffers.ReadOnlySequence<byte>(buffer.WrittenMemory);
 
-        // Act
-        var stopwatch = Stopwatch.StartNew();
-        for (int i = 0; i < 1000; i++)
-        {
-            var result = serializer.Deserialize(sequence);
-            result.Should().NotBeNull();
-        }
-        stopwatch.Stop();
+        serializer.Deserialize(sequence).Should().BeEquivalentTo(data);
 
-        // Assert - Should be reasonably fast (less than 50ms for 1000 operations)
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(50);
+        // Act
+        var perOperation = AllocatedBytesPerOperation(1000, () => serializer.Deserialize(sequence));
+
+        // Assert
+        perOperation.Should().BeLessThanOrEqualTo(DeserializeBudgetBytes);
     }
 
     [Fact]
-    public async Task HybridCache_Operations_Should_Be_Fast()
+    public async Task HybridCache_Operations_Should_Round_Trip()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -121,8 +116,7 @@ public class PerformanceRegressionTests
             Description = "Testing cache operation performance"
         };
 
-        // Act
-        var stopwatch = Stopwatch.StartNew();
+        // Act and assert
         for (int i = 0; i < 100; i++)
         {
             var result = await cache.GetOrCreateAsync(
@@ -130,10 +124,6 @@ public class PerformanceRegressionTests
                 async ct => data);
             result.Should().BeEquivalentTo(data);
         }
-        stopwatch.Stop();
-
-        // Assert - Should be reasonably fast (less than 1500ms for 100 operations with tolerance for various environments)
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(1500);
     }
 
     [Fact]
@@ -173,27 +163,22 @@ public class PerformanceRegressionTests
 
         var sequence = new System.Buffers.ReadOnlySequence<byte>(buffer.WrittenMemory);
 
-        // Act
-        var stopwatch = Stopwatch.StartNew();
-        for (int i = 0; i < 10000; i++)
-        {
-            var result = serializer.Deserialize(sequence);
-            result.Should().Be(value);
-        }
-        stopwatch.Stop();
+        serializer.Deserialize(sequence).Should().Be(value);
 
-        // Assert - Hash validation should be very fast (less than 500ms for 10000 operations with tolerance)
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(500);
+        // Act
+        var perOperation = AllocatedBytesPerOperation(10000, () => serializer.Deserialize(sequence));
+
+        // Assert
+        perOperation.Should().BeLessThanOrEqualTo(SchemaCheckedDeserializeBudgetBytes);
     }
 
     [Fact]
-    public void Concurrent_Operations_Should_Maintain_Performance()
+    public void Concurrent_Operations_Should_Be_Thread_Safe()
     {
         // Arrange
         var serializer = new TestPerformanceSerializer();
 
-        // Act
-        var stopwatch = Stopwatch.StartNew();
+        // Act and assert
         System.Threading.Tasks.Parallel.For(0, 100, i =>
         {
             var buffer = new ArrayBufferWriter<byte>();
@@ -204,10 +189,27 @@ public class PerformanceRegressionTests
             var result = serializer.Deserialize(sequence);
             result.Should().Be(value);
         });
-        stopwatch.Stop();
+    }
 
-        // Assert - Should complete in reasonable time (less than 500ms with tolerance for various environments)
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(500);
+    // Wall-clock thresholds were removed: they measured the machine rather than the code and failed
+    // under parallel test execution. Allocation per operation is deterministic for a given runtime
+    // and is what these tests exist to protect. Timing belongs in Rapp.Benchmark.
+    //
+    // Serialize writes into the caller's buffer and must allocate nothing. The deserialize budgets are
+    // exactly the result graph on a 64-bit runtime: the object, its two strings and its int[5] (272 B),
+    // and one 22-character string (72 B). Anything above that is overhead added by Rapp.
+    private const long SerializeBudgetBytes = 0;
+    private const long DeserializeBudgetBytes = 272;
+    private const long SchemaCheckedDeserializeBudgetBytes = 72;
+
+    private static long AllocatedBytesPerOperation(int iterations, Action operation)
+    {
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < iterations; i++)
+        {
+            operation();
+        }
+        return (GC.GetAllocatedBytesForCurrentThread() - before) / iterations;
     }
 
     private sealed class TestPerformanceSerializer : RappBaseSerializer<string>

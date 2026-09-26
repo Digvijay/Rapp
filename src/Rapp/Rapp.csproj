@@ -14,12 +14,13 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>v1.2.0 - Introduces Ghost Reader for zero-copy views. Includes automatic schema validation and zero-overhead telemetry options.</PackageReleaseNotes>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>true</IncludeBuildOutput>
+    <!-- CopyProjectReferencesToPackage depends on ResolveReferences, which would rebuild references under pack no-build (NETSDK1085). -->
+    <BuildProjectReferences Condition="'$(NoBuild)' == 'true'">false</BuildProjectReferences>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
     <!-- Metrics are excluded from NuGet package for zero overhead -->
-    <!-- Define RAPP_TELEMETRY in your project to enable metrics -->
+    <!-- RAPP_TELEMETRY must not be defined for this project when packing; see docs/known-issues.md entry 9 -->
     <!-- Package Validation -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <GenerateCompatibilitySuppressionFile>true</GenerateCompatibilitySuppressionFile>
