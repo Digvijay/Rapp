@@ -342,7 +342,75 @@ property value. `dotnet publish` on a multi-targeted project also requires `--fr
 (NETSDK1129), so the publish step now names `net10.0` — on the publish step only, since adding it
 to the solution-wide build would break the `netstandard2.0` generator.
 
-A record of fifteen defects, all fixed, measures how hard this repository was looked at. It is not
+## 16. The AOT gate measured the dependencies, and the README overstated the result
+
+Once defects 14 and 15 were fixed, the AOT job ran to completion for the first time — and failed.
+It published `Samples/ConsoleApp` with `TreatWarningsAsErrors=true` and `TrimmerSingleWarn=false`,
+which asks ILC to report every trim and AOT warning in the whole program, from every assembly, and
+to treat each as fatal. That gate cannot distinguish "Rapp is AOT-safe" from "everything Rapp
+depends on is AOT-safe", and the second is not true.
+
+Measured on the probe described below, `TrimmerSingleWarn=false`, .NET 10.0.12 ILC:
+
+| Originating assembly | Warnings |
+|---|---|
+| MemoryPack 1.21.4 (reflective formatter provider) | 21 |
+| Microsoft.Extensions.Caching.Hybrid 10.3.0 (`DefaultJsonSerializerFactory`) | 9 |
+| **Rapp** | **0** |
+
+So the claim in the README was directionally right and specifically wrong. Rapp's own code is
+clean. But the README said Rapp was "100% compatible with Native AOT", that it "avoids
+`System.Reflection` entirely … preventing AOT trim warnings", and that MemoryPack is "designed from
+the ground up for AOT" — and a reader who set `PublishAot=true` and `TreatWarningsAsErrors=true`
+would immediately have seen 30 warnings. The README also blamed the sample warnings solely on the
+JSON comparison logic in the ASP.NET and gRPC demos, which was incomplete: `ConsoleApp` has no JSON
+comparison and still fails a strict gate, because MemoryPack and HybridCache are enough on their
+own.
+
+Two smaller things fell out of the same investigation. `ILLinkTreatWarningsAsErrors=false` does not
+work; ILC honours plain `TreatWarningsAsErrors`. And ILC's default single-warn mode collapses
+inferred trim warnings into one `IL2104`/`IL3053` per assembly, but never collapses `IL2026`/`IL3050`,
+because those come from explicit `RequiresUnreferencedCode`/`RequiresDynamicCode` annotations rather
+than from inference — so "suppress the roll-ups" would have left HybridCache's three annotation
+warnings behind anyway.
+
+**Fixed, in the way that makes the claim checkable rather than the build green.**
+
+The obvious repair is to add the offending codes to `NoWarn`. That was rejected: warning codes are
+not owned by an assembly, so `NoWarn=IL3050` silences MemoryPack *and* Rapp, and the gate would then
+pass by construction. There are no IL suppressions anywhere in this change.
+
+Instead there is now `tools/Rapp.AotProbe`, a console app that consumes only the public package
+surface — the `[RappCache]` attribute, the generated `UseRappFor…` registration, the generated
+serializer and `HybridCache`. CI publishes it with `PublishAot=true`, leaves ILC warnings
+non-fatal so that compilation completes, and then **fails if any warning names a Rapp type**:
+
+```
+grep -E 'IL[0-9]{4}: Rapp' ./ilc.log
+```
+
+That assertion says exactly what the README claims, and cannot be weakened by adding a code to a
+list. It was verified in both directions: it passes on the real code, and when a `MakeGenericType`
+call was temporarily added to `src/Rapp`, it caught all three resulting warnings (IL3050, IL2055,
+IL2067) and failed.
+
+Leaving ILC's warnings non-fatal also has a point beyond letting the gate read them: the native
+binary now gets built, and CI runs it. It round-trips values, empty strings, empty collections,
+default `DateTime`s and 4 KB payloads. Compiling proves only that ILC was willing to compile;
+executing is what shows the reflective fallbacks are never reached, because under Native AOT a
+reached fallback throws rather than degrading quietly.
+
+The blocking analyzer job was also re-scoped from `Rapp.sln` to `src/Rapp/Rapp.csproj`, since the
+benchmark, playground and dashboard projects are not shipped, and the samples now run as an
+advisory, non-blocking job.
+
+**Not fixed, because it is not ours to fix.** The 30 dependency warnings remain. They are now
+documented in the README with their true cause and, more usefully, with the consequence that
+matters to a consumer: a type cached through `HybridCache` **without** `[RappCache]` falls back to
+reflection-based `System.Text.Json`, which is not AOT-safe. That caveat was previously undocumented
+and is the one case where these warnings describe a real runtime risk.
+
+A record of sixteen defects, all fixed, measures how hard this repository was looked at. It is not
 a claim that there is nothing left to find.
 
 ---

@@ -1,7 +1,18 @@
 name: Native AOT validation
 
-# Proves the Native AOT claim instead of asserting it: publishes a real consumer
-# with PublishAot=true, then executes the produced native binary.
+# Proves the Native AOT claim instead of asserting it.
+#
+# The previous version of this workflow published Samples/ConsoleApp with
+# -p:TreatWarningsAsErrors=true, which conflated two different claims: "Rapp is AOT-safe" and
+# "everything Rapp depends on is AOT-safe". The second is false — MemoryPack 1.21.4 ships a
+# reflective formatter provider and Microsoft.Extensions.Caching.Hybrid 10.3.0 falls back to
+# System.Text.Json reflection — so the gate failed on code this repository does not own, and there
+# was no way to fix it without either vendoring dependencies or silencing warning codes globally.
+#
+# It now gates on the *origin* of each warning rather than its code. Warning codes are not owned by
+# an assembly: NoWarn IL3050 to silence MemoryPack and you have silenced it for Rapp too, which is
+# the one place it would have mattered. Asserting that no warning names a Rapp type says exactly
+# what the README claims and cannot be weakened by adding a code to a list.
 
 permissions:
   contents: read
@@ -13,8 +24,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  aot-publish-and-run:
-    name: AOT publish and run (${{ matrix.os }})
+  aot-probe:
+    name: AOT probe (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -33,14 +44,35 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
 
-      - name: Publish with Native AOT
-        run: >
-          dotnet publish Samples/ConsoleApp/ConsoleApp.csproj
-          --configuration Release
-          --framework net10.0
-          -p:TreatWarningsAsErrors=true
-          -p:TrimmerSingleWarn=false
-          --output ./aot-output
+      # ILC warnings are left non-fatal on purpose. If they were errors, compilation would stop and
+      # the probe could never be run — and running it is the only thing that proves the reflective
+      # fallbacks are unreachable at runtime rather than merely unproven at compile time. The strict
+      # assertion happens in the next step, against the captured log.
+      - name: Publish the AOT probe
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet publish tools/Rapp.AotProbe/Rapp.AotProbe.csproj \
+            --configuration Release \
+            --framework net10.0 \
+            -p:TrimmerSingleWarn=false \
+            -p:TreatWarningsAsErrors=false \
+            --output ./aot-output \
+            2>&1 | tee ./ilc.log
+
+      - name: Fail if any trim or AOT warning originates in Rapp
+        shell: bash
+        run: |
+          set -e
+          # ILC formats diagnostics as "ILC : Trim analysis warning IL2026: <origin>: <detail>".
+          # Anchoring on the code and colon means we match the originating symbol, not a mention of
+          # Rapp somewhere later in the message text.
+          if grep -E 'IL[0-9]{4}: Rapp' ./ilc.log > ./rapp-warnings.log; then
+            echo "::error::Trim or AOT warnings originate in Rapp's own code. Rapp claims to be AOT-safe; fix the code or correct the claim."
+            cat ./rapp-warnings.log
+            exit 1
+          fi
+          echo "No trim or AOT warnings originate in Rapp."
 
       - name: Execute the native binary
         shell: bash
@@ -55,13 +87,26 @@ jobs:
           echo "Running $binary"
           "$binary"
 
-      - name: Report native binary size
+      - name: Summarise
+        if: always()
         shell: bash
         run: |
-          echo "### Native AOT output (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ls -lh ./aot-output | head -n 25 >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### Native AOT probe (${{ matrix.os }})"
+            echo
+            echo "Warnings by originating assembly:"
+            echo '```'
+            grep -oE 'IL[0-9]{4}: [A-Za-z0-9_.]+' ./ilc.log 2>/dev/null \
+              | sed -E 's/IL[0-9]{4}: //' \
+              | cut -d. -f1 \
+              | sort | uniq -c | sort -rn || echo "none"
+            echo '```'
+            echo
+            echo "Native output:"
+            echo '```'
+            ls -lh ./aot-output 2>/dev/null | head -n 25 || echo "none"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
   trim-analysis:
     name: Trimming and AOT analyzers
@@ -74,11 +119,39 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Build with AOT and trim analyzers as errors
+      # Scoped to the project that actually ships. Running this across Rapp.sln measured the
+      # benchmark, playground and dashboard projects too, none of which are published as packages.
+      - name: Build shipping project with AOT and trim analyzers as errors
         run: >
-          dotnet build Rapp.sln
+          dotnet build src/Rapp/Rapp.csproj
           --configuration Release
           -p:EnableAotAnalyzer=true
           -p:EnableTrimAnalyzer=true
           -p:EnableSingleFileAnalyzer=true
           -p:WarningsAsErrors=IL2026%3BIL2046%3BIL2062%3BIL2067%3BIL2070%3BIL2072%3BIL2075%3BIL2087%3BIL2091%3BIL3050%3BIL3051%3BIL3052%3BIL3053
+
+  samples-advisory:
+    name: Samples AOT (advisory)
+    runs-on: ubuntu-latest
+    # Advisory, not a gate. The samples exercise dependencies Rapp does not own, so their AOT
+    # warnings describe MemoryPack and HybridCache rather than Rapp. Kept visible so a regression
+    # in a sample is noticed, without letting a third-party annotation gap block the repository.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install AOT native toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Publish the console sample
+        run: >
+          dotnet publish Samples/ConsoleApp/ConsoleApp.csproj
+          --configuration Release
+          --framework net10.0
+          -p:TreatWarningsAsErrors=false
+          --output ./sample-output

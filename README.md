@@ -225,9 +225,9 @@ Rapp includes built-in telemetry for cache performance tracking:
 
 > **Note:** Hit and miss counters are always available. JSON size comparison is compiled only when Rapp itself is built from source with `RAPP_TELEMETRY`; defining the symbol in a consuming project has no effect. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
-### 3. AOT Compatibility
+### 3. Native AOT Compatibility
 
-Rapp is fully compatible with Native AOT compilation:
+Rapp's own code is Native AOT clean, and CI proves it on every commit rather than asserting it.
 
 ```xml
 <!-- In your .csproj -->
@@ -236,19 +236,19 @@ Rapp is fully compatible with Native AOT compilation:
 </PropertyGroup>
 ```
 
-```
+**Why Rapp is AOT ready:**
+- **Source generation:** all serialization code is generated at compile time by a Roslyn source generator.
+- **No runtime reflection on the serialization path:** Rapp calls only MemoryPack's generic `Serialize<T>`/`Deserialize<T>` entry points, which resolve to source-generated formatters.
+- **Statically visible types:** every `[RappCache]` type is rooted at compile time, so the AOT linker can see it.
 
-### 3. Native AOT Compatibility
+**How that claim is verified.** `tools/Rapp.AotProbe` is a console app that consumes only the public package surface. CI publishes it with `PublishAot=true`, fails the build if any trim or AOT warning *originates in a Rapp type*, and then executes the resulting native binary, which round-trips values, empty collections and 4 KB payloads. Compilation alone would only show that ILC was willing to compile; running the binary is what demonstrates that no reflective fallback is reached, because under Native AOT such a fallback throws rather than degrading quietly.
 
-Rapp is **100% compatible with Native AOT** (Ahead-of-Time) compilation, making it ideal for serverless and high-performance cloud scenarios.
+The gate deliberately checks the origin of a warning rather than its code. Suppressing, say, `IL3050` by code would silence it for Rapp as well as for its dependencies, which is the one place it would have mattered.
 
-**Why Rapp is AOT Ready:**
-- **Source Generation:** All serialization code is generated at compile-time using Roslyn 4.0 source generators.
-- **No Runtime Reflection:** Rapp avoids `System.Reflection` entirely for serialization paths, preventing AOT trim warnings.
-- **Static Analysis:** All types are analyzed during build, ensuring AOT linkers can see all used types.
-- **MemoryPack Foundation:** Built on top of MemoryPack, which is designed from the ground up for AOT.
+> **Known limitation — dependencies, not Rapp.** Publishing an app that uses Rapp with `PublishAot=true` currently emits 30 trim/AOT warnings: 21 from MemoryPack 1.21.4's reflective formatter provider and 9 from `Microsoft.Extensions.Caching.Hybrid` 10.3.0's `System.Text.Json` fallback serializer. **None originate in Rapp.** Both are reachable from static initialisation, so ILC reports them even though Rapp never calls them. They do not affect `[RappCache]` types, which use the source-generated path. They *do* matter if you cache a type **without** `[RappCache]`: HybridCache then falls back to reflection-based JSON, which is not AOT-safe. Apply `[RappCache]` to every cached type, and treat these warnings as the annotation state of two upstream packages rather than as a Rapp defect. Tracked in [docs/known-issues.md](docs/known-issues.md).
 
-> **Note on Demos:** The sample applications (`AspNetCoreMinimalApi`, `GrpcService`) utilize `System.Text.Json` reflection-based serialization **solely for comparison purposes** (to calculate cost savings vs JSON). Because of this comparative logic, the demos themselves generate AOT warnings. However, the **Rapp library itself** is fully AOT compliant and can be used in strictly AOT-enforced projects (like the `ConsoleApp` sample configured for AOT).
+> **Note on samples:** `AspNetCoreMinimalApi` and `GrpcService` use `System.Text.Json` reflection deliberately, to compute the cost comparison against JSON. Their AOT warnings are expected and their AOT job is advisory rather than blocking.
+
 
 ##  Advanced Features
 
@@ -330,7 +330,7 @@ Based on research from official repositories and creator documentation:
 
 | **Feature** | **Rapp** | **MemoryPack** | **MessagePack** | **protobuf-net** | **System.Text.Json** |
 |---|---|---|---|---|---|
-| **Native AOT** |  Full |  Full |  Source gen |  Supported |  Supported |
+| **Native AOT** | Own code clean; verified by a published-and-executed probe | Source gen; provider emits trim warnings | Source gen | Supported | Supported via source gen |
 | **Schema Validation** |  Automatic SHA256 |  Crashes on changes |  Manual versioning |  IDL required |  N/A |
 | **Version Tolerance** |  Detect incompatible |  **Can't remove/reorder/change** |  Full tolerance |  Manual management |  N/A |
 | **Null Handling** |  Proper |  **No null distinction** |  Proper |  **Known issues** |  Proper |

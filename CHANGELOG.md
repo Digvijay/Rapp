@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2026-09-25
 
+### Added
+- **`tools/Rapp.AotProbe`, and an AOT gate that can actually fail.** A console app that consumes
+  only the public package surface. CI publishes it with `PublishAot=true` and fails the build if
+  any trim or AOT warning *originates in a Rapp type*, then executes the native binary to
+  round-trip values, empty collections and 4 KB payloads. The gate was verified in both
+  directions: it passes on the real code, and it catches a deliberately injected
+  `MakeGenericType` call in `src/Rapp`.
+
 ### Fixed — found by running CI on GitHub-hosted x64 runners for the first time
+- **The AOT gate measured the dependencies, not Rapp.** It published a sample with
+  `TreatWarningsAsErrors=true` and `TrimmerSingleWarn=false`, which makes every trim warning in the
+  whole program fatal — including 21 from MemoryPack 1.21.4's reflective formatter provider and 9
+  from `Microsoft.Extensions.Caching.Hybrid` 10.3.0's JSON fallback. **Zero originate in Rapp.**
+  The gate now asserts on the origin of a warning rather than its code, because `NoWarn=IL3050`
+  would silence Rapp as well as MemoryPack. No IL suppressions were added. The blocking analyzer
+  job is re-scoped from `Rapp.sln` to `src/Rapp/Rapp.csproj`; the samples are now advisory.
+- **The README overstated the AOT claim.** It said Rapp was "100% compatible with Native AOT" and
+  that it avoided reflection "preventing AOT trim warnings", when publishing a consumer app with
+  `PublishAot=true` emits 30 warnings from two dependencies. Corrected to state what is true and
+  verified — Rapp's own code is clean — and to document the consequence that actually affects
+  consumers: a type cached **without** `[RappCache]` falls back to reflection-based
+  `System.Text.Json`, which is not AOT-safe. Also removed a duplicated heading and an unterminated
+  code fence in the same section.
 - **The AOT validation workflow had never run to completion.** It passed `-p:PublishAot=true` on
   the command line, which creates a *global* property that MSBuild propagates into every
   `ProjectReference` — including the `netstandard2.0` generator, which cannot be AOT-compiled
