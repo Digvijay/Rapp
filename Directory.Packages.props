@@ -10,15 +10,14 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
     <PackageVersion Include="System.Text.Json" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <!--
-      Transitive pin. Microsoft.AspNetCore.OpenApi 10.0.3 pulls Microsoft.OpenApi 2.0.0, which has a
-      known high-severity advisory (GHSA-v5pm-xwqc-g5wc). CentralPackageTransitivePinningEnabled is
+      Transitive pin. Microsoft.AspNetCore.OpenApi has recently pulled Microsoft.OpenApi builds with
+      a known high-severity advisory (GHSA-v5pm-xwqc-g5wc). CentralPackageTransitivePinningEnabled is
       on above, so declaring the version here lifts the transitive reference to a patched build.
-      Remove once Microsoft.AspNetCore.OpenApi ships with a patched Microsoft.OpenApi by default.
+      Remove once restore proves Microsoft.AspNetCore.OpenApi ships with a patched Microsoft.OpenApi by default.
     -->
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
-    
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />    
     <!-- Source Generators -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
