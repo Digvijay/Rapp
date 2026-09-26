@@ -19,8 +19,8 @@
     -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
     <!-- Source Generators -->
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0-2.25625.1" />
 
     <!-- Build & Tools -->
 
