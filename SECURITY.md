@@ -1,96 +1,66 @@
 # Security Policy
 
-## Supported Versions
+Rapp provides schema-safe binary caching. This document describes how to report a vulnerability
+and what response to expect.
 
-We release patches for security vulnerabilities for the following versions:
+## Reporting a vulnerability
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+**Do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
 
-## Reporting a Vulnerability
+Report vulnerabilities privately through either of the following channels:
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+- [GitHub private vulnerability reporting](https://github.com/Digvijay/Rapp/security/advisories/new) (preferred)
+- Email the maintainer at `security@digvijay.dev`
 
-Instead, please report security vulnerabilities by emailing:
+Please include as much of the following as you can provide:
 
-digvijay atr digvijay.dev
+- The type of issue and the affected component or package
+- Full paths of the source files related to the issue
+- The affected version, commit, or package version
+- Step-by-step instructions to reproduce
+- Proof-of-concept or exploit code, if available
+- The impact of the issue, including how an attacker might exploit it
 
-You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
+### If this project is transferred to Microsoft
 
-Please include the following information (as much as you can provide) to help us better understand the nature and scope of the possible issue:
+This repository is prepared for review by the Microsoft Open Source Programs Office.
+If ownership transfers to Microsoft, security reporting moves to the Microsoft Security
+Response Center (MSRC) and this policy will be replaced by the standard MSRC policy:
 
-* Type of issue (e.g. buffer overflow, schema validation bypass, injection, etc.)
-* Full paths of source file(s) related to the manifestation of the issue
-* The location of the affected source code (tag/branch/commit or direct URL)
-* Any special configuration required to reproduce the issue
-* Step-by-step instructions to reproduce the issue
-* Proof-of-concept or exploit code (if possible)
-* Impact of the issue, including how an attacker might exploit the issue
+- Report at [https://msrc.microsoft.com/create-report](https://aka.ms/opensource/security/create-report)
+- Email [secure@microsoft.com](mailto:secure@microsoft.com), optionally encrypted with the
+  [MSRC PGP key](https://aka.ms/opensource/security/pgpkey)
+- See the [Microsoft vulnerability disclosure policy](https://aka.ms/opensource/security/cvd)
 
-This information will help us triage your report more quickly.
+Until such a transfer occurs, use the maintainer channels above. Do not send reports for this
+project to MSRC, because MSRC does not currently own this code.
 
-## Preferred Languages
+## Response targets
 
-We prefer all communications to be in English.
+| Stage | Target |
+| --- | --- |
+| Acknowledgement of report | 3 business days |
+| Initial assessment and severity triage | 10 business days |
+| Fix or documented mitigation for High/Critical | 90 days from triage |
 
-## Security Update Policy
+These are best-effort targets for an independently maintained project, not a contractual
+service-level agreement. See [SUPPORT.md](SUPPORT.md) for the support model.
 
-When we learn of a security vulnerability, we will:
+## Supported versions
 
-1. Confirm the problem and determine affected versions
-2. Audit code to find any similar problems
-3. Prepare fixes for all still-supported releases
-4. Release patched versions as soon as possible
+Security fixes are applied to the latest released minor version. Older versions are not
+patched. See [SUPPORT.md](SUPPORT.md) for the full support and lifecycle statement.
 
-## Security-Related Configuration
+## Disclosure policy
 
-### Telemetry and Logging
+This project follows coordinated disclosure. Issues are disclosed publicly through a GitHub
+Security Advisory once a fix or documented mitigation is available. Reporters are credited
+unless they ask not to be.
 
-Rapp collects minimal telemetry by default. To disable:
+## Security considerations for users
 
-```csharp
-RappConfiguration.EnableTelemetry = false;
-```
+Rapp deserializes binary payloads from cache stores. Treat the cache as a trust boundary: protect the transport and the store, and do not rely on schema hashing as an authentication or integrity mechanism against an attacker who can write to the cache.
 
-### Detailed Errors
-
-Detailed errors are disabled by default to prevent information leakage. Only enable in development:
-
-```csharp
-// Development only
-RappConfiguration.EnableDetailedErrors = true;
-```
-
-### Schema Validation
-
-Rapp performs cryptographic schema validation on all deserialization operations. This cannot be disabled and protects against:
-
-* Accidental deserialization of incompatible data
-* Schema evolution bugs during deployments
-* Potential injection attacks via malformed cache data
-
-## Known Limitations
-
-### Denial of Service
-
-Large payloads may consume significant memory during deserialization. Applications should implement appropriate size limits at the cache layer.
-
-### Side-Channel Attacks
-
-Schema hash comparison uses standard equality checks and may be vulnerable to timing attacks. However, schema hashes are not considered secret material.
-
-## Disclosure Policy
-
-When we receive a security bug report, we will:
-
-1. Confirm the problem and determine affected versions
-2. Audit code for any similar problems
-3. Prepare fixes for all still-supported releases
-4. Publish a security advisory on GitHub
-5. Release new versions with fixes
-
-## Comments on this Policy
-
-If you have suggestions on how this process could be improved, please submit a pull request.
+Build-time code generation is part of this project's design. Source generators execute inside
+the compiler process during build. Only build code you trust, and review generated output when
+it participates in a security decision.

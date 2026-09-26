@@ -1,21 +1,26 @@
 <Project>
+  <Import Project="Directory.TargetFrameworks.props" />
   <PropertyGroup>
     <!-- Core Language & Framework Settings -->
-    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     
     <!-- Code Quality & Strictness -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <AnalysisMode>Recommended</AnalysisMode>
+    <!--
+      Pinned deliberately. <AnalysisLevel>latest</AnalysisLevel> means "whatever the newest SDK on
+      the build machine enforces", so installing a new SDK can fail a build that has not changed.
+      That happened here: the .NET 11 RC SDK turned previously-clean code into 314 build errors
+      (IDE0055, IDE0011, IDE0059) with TreatWarningsAsErrors on. Pinning keeps builds reproducible
+      across SDKs; raise it deliberately and fix the new diagnostics in the same commit.
+    -->
+    <AnalysisLevel>10.0</AnalysisLevel>    <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <NoWarn>$(NoWarn);CA2007;CA1014;CA1707</NoWarn>
 
     <!-- Global Feature Flags -->
     <IsAotCompatible>true</IsAotCompatible>
-    <DefineConstants>$(DefineConstants);RAPP_TELEMETRY</DefineConstants>
 
     <!-- Centralized Package Metadata -->
     <Authors>Digvijay Chauhan</Authors>
@@ -24,5 +29,14 @@
     <RepositoryUrl>https://github.com/Digvijay/Rapp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!--
+    Only Rapp and its generator ship. Without this, `dotnet pack` on the solution produced
+    Rapp.Benchmark.nupkg and Rapp.Dashboard.nupkg, which would have been uploaded as CI release
+    artifacts and could have been pushed to a feed by accident.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Rapp.Benchmark' Or '$(MSBuildProjectName)' == 'Rapp.Dashboard' Or '$(MSBuildProjectName)' == 'Rapp.Playground' Or '$(MSBuildProjectName)' == 'Rapp.Tests'">
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>

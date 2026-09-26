@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Rapp\Rapp.csproj" />
@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <TargetFrameworks>$(ToolkitAppTargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

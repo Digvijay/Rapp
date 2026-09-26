@@ -1,0 +1,70 @@
+name: Bug report
+description: Report a defect so it can be reproduced and fixed
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a report. Please do not report security vulnerabilities here —
+        see SECURITY.md for the private reporting process.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour, including any exception and stack trace.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest code or repository that reproduces the issue.
+      render: csharp
+    validations:
+      required: true
+
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      placeholder: e.g. 1.2.0
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET SDK version
+      description: Output of `dotnet --version`
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Compilation mode
+      options:
+        - JIT (default)
+        - Native AOT
+        - Trimmed, not AOT
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and architecture
+      placeholder: e.g. Ubuntu 24.04 x64, Windows 11 arm64
+    validations:
+      required: true

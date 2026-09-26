@@ -176,14 +176,12 @@ public static class RappMetrics
     }
 }
 
-#if RAPP_TELEMETRY
 /// <summary>
 /// Interface for collecting Rapp cache metrics in test and development scenarios.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This interface is only available when the <c>RAPP_TELEMETRY</c> compilation
-/// symbol is defined. It provides a testable abstraction for metrics collection
+/// It provides a testable abstraction for metrics collection
 /// that can be mocked in unit tests.
 /// </para>
 /// <para>
@@ -297,4 +295,3 @@ public class RappMetricsCollector : IRappMetricsCollector
     /// </remarks>
     public (long Hits, long Misses) GetStats() => (_hits, _misses);
 }
-#endif

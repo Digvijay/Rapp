@@ -24,6 +24,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// The generated serializers, reused for the opt-in size comparison below.
+var ProductSerializer = new ProductRappSerializer();
+var CustomerSerializer = new CustomerRappSerializer();
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -42,7 +46,7 @@ app.MapGet("/products/{id}", async (int id, HybridCache cache) =>
 {
     var product = await cache.GetOrCreateAsync(
         $"product-{id}",
-        async ct => await GetProductAsync(id, ct)
+        async ct => Measure(await GetProductAsync(id, ct), ProductSerializer)
     );
     return Results.Ok(product);
 });
@@ -62,7 +66,7 @@ app.MapGet("/customers/{id}", async (int id, HybridCache cache) =>
 {
     var customer = await cache.GetOrCreateAsync(
         $"customer-{id}",
-        async ct => await GetCustomerAsync(id, ct)
+        async ct => Measure(await GetCustomerAsync(id, ct), CustomerSerializer)
     );
     return Results.Ok(customer);
 });
@@ -75,6 +79,12 @@ app.MapDelete("/cache/{key}", async (string key, HybridCache cache) =>
 });
 
 app.Run();
+
+// The dashboard's "JSON equivalent" figure has to come from somewhere. Rapp itself no longer
+// measures it — that cost belongs to whoever wants the number, not to every cache operation in
+// production. See docs/known-issues.md entries 9 and 11.
+static T Measure<T>(T value, RappBaseSerializer<T> serializer) =>
+    RappSizeComparison.Record(value, serializer);
 
 // Sample data access methods
 static async Task<Product> GetProductAsync(int id, CancellationToken ct)
