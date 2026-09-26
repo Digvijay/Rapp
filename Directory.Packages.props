@@ -17,23 +17,23 @@
       on above, so declaring the version here lifts the transitive reference to a patched build.
       Remove once restore proves Microsoft.AspNetCore.OpenApi ships with a patched Microsoft.OpenApi by default.
     -->
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />    
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
     <!-- Source Generators -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
-    
+
     <!-- Build & Tools -->
-    
+
     <!-- gRPC & Web -->
     <PackageVersion Include="Grpc.AspNetCore" Version="2.70.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="9.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
-    
+
     <!-- Testing & Benchmarking -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="coverlet.collector" Version="8.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="8.0.1" />
     <PackageVersion Include="FluentAssertions" Version="8.9.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
   </ItemGroup>
