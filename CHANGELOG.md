@@ -45,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a solution-wide build breaks the `netstandard2.0` generator.
 
 ### Changed
+- Updated the Dependabot queue after the OSPO baseline: `System.Text.Json`,
+  `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Hosting`,
+  `Microsoft.AspNetCore.OpenApi`, `Microsoft.Extensions.Caching.Hybrid`, Roslyn compiler/analyzer
+  packages, `Microsoft.NET.Test.Sdk`, `coverlet.collector`, and `FluentAssertions`; GitHub Pages
+  and artifact actions now use their current major versions after checking workflow compatibility.
 - Multi-targets `net8.0` (LTS) and `net10.0` (current) instead of a single framework, so the
   package no longer forces consumers onto the newest runtime. `net11.0` is validated in CI behind
   an opt-in switch.
