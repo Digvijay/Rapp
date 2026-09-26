@@ -6,11 +6,11 @@
   <ItemGroup>
     <!-- Core Dependencies -->
     <PackageVersion Include="MemoryPack" Version="1.21.4" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageVersion Include="System.Text.Json" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <!--
       Transitive pin. Microsoft.AspNetCore.OpenApi has recently pulled Microsoft.OpenApi builds with
       a known high-severity advisory (GHSA-v5pm-xwqc-g5wc). CentralPackageTransitivePinningEnabled is
@@ -25,7 +25,7 @@
 
     <!-- gRPC & Web -->
     <PackageVersion Include="Grpc.AspNetCore" Version="2.70.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="10.0.12" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
 
     <!-- Testing & Benchmarking -->
