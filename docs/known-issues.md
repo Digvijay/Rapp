@@ -283,14 +283,66 @@ carries a comment recording that the symbol must not be defined there when packi
 Two caveats belong here rather than in the table, because neither is a defect and both bound what
 the entries above are worth:
 
-* Every result recorded here was produced on a single Windows ARM64 machine. CI has never executed
-  on a GitHub-hosted runner, so nothing above is confirmed on x64 or on Linux.
+* Every result recorded here was produced on a single Windows ARM64 machine, **except** where noted
+  below: the suite now also runs on GitHub-hosted x64 Linux and Windows runners, and the CI, OSPO
+  compliance and benchmark workflows are green there.
 * The `net11.0` leg is opt-in via `IncludePreviewTargetFramework`. It has been exercised on the
   same machine with SDK `11.0.100-rc.1.26425.128` (restore, build and every test, `net8.0`,
   `net10.0` and `net11.0`), with no failures. A release candidate is not a release; the leg
   should be re-run against the GA SDK.
 
-A record of thirteen defects, all fixed, measures how hard this repository was looked at. It is not
+# Found by running CI on GitHub-hosted x64 runners for the first time
+
+The caveat above — "CI has never executed on a GitHub-hosted runner" — was retired by opening a
+pull request. Doing so immediately produced two failures that a Windows ARM64 machine cannot
+produce, because both are properties of how the workflow invokes the CLI rather than of the code.
+
+## 14. `-p:PublishAot=true` on the command line broke the analyzer projects (NETSDK1207)
+
+`aot-validation.yml` passed `-p:PublishAot=true` to `dotnet publish`. Two things were wrong with
+that at once.
+
+It was redundant: `src/Rapp/Rapp.csproj` already declares `PublishAot`, so the flag restated a
+setting the project owns.
+
+It was also harmful. A `-p:` switch on the command line creates a **global property**, and MSBuild
+propagates global properties into every `ProjectReference` it builds. `Rapp.Gen` targets
+`netstandard2.0`, which cannot be AOT-compiled, so the build stopped with:
+
+```
+error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
+```
+
+The distinction matters beyond this repository: the same property set in a project file does *not*
+flow across a `ProjectReference`, which is why this never reproduced locally.
+
+**Fixed.** The flag is removed. AOT is configured where it belongs, in the project file, and the
+workflow simply publishes.
+
+## 15. The IL-warning list was split on its commas (MSB1006)
+
+The same step passed:
+
+```
+-p:WarningsAsErrors=IL2026,IL2046,IL2062,...
+```
+
+The dotnet CLI splits `-p:` values on commas, so everything after the first code was parsed as a
+separate switch and the run failed before compiling anything:
+
+```
+MSBUILD : error MSB1006: Property is not valid. Switch: IL2046
+```
+
+The step had therefore never enforced a single one of those warnings-as-errors. A bare `;` is no
+better, because it is the property separator.
+
+**Fixed.** The codes are joined with `%3B`, the escaped semicolon, which reaches MSBuild as one
+property value. `dotnet publish` on a multi-targeted project also requires `--framework`
+(NETSDK1129), so the publish step now names `net10.0` — on the publish step only, since adding it
+to the solution-wide build would break the `netstandard2.0` generator.
+
+A record of fifteen defects, all fixed, measures how hard this repository was looked at. It is not
 a claim that there is nothing left to find.
 
 ---

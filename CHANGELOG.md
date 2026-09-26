@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2026-09-25
 
+### Fixed — found by running CI on GitHub-hosted x64 runners for the first time
+- **The AOT validation workflow had never run to completion.** It passed `-p:PublishAot=true` on
+  the command line, which creates a *global* property that MSBuild propagates into every
+  `ProjectReference` — including the `netstandard2.0` generator, which cannot be AOT-compiled
+  (`NETSDK1207`). The flag was also redundant: the target project already declares `PublishAot`.
+  Removed; AOT stays configured in the project file, where it does not flow across references.
+- **The trim and AOT warnings-as-errors list was never enforced.** It was passed as
+  `-p:WarningsAsErrors=IL2026,IL2046,...`, and the dotnet CLI splits `-p:` values on commas, so
+  every code after the first was parsed as a separate switch and the run failed with
+  `MSB1006: Property is not valid. Switch: IL2046` before compiling anything. The codes are now
+  joined with `%3B`, the escaped semicolon.
+- **`dotnet publish` on a multi-targeted project needs an explicit framework** (`NETSDK1129`). The
+  publish step now passes `--framework net10.0` — and only the publish step, because passing it to
+  a solution-wide build breaks the `netstandard2.0` generator.
+
 ### Changed
 - Multi-targets `net8.0` (LTS) and `net10.0` (current) instead of a single framework, so the
   package no longer forces consumers onto the newest runtime. `net11.0` is validated in CI behind
